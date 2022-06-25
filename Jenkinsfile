@@ -96,14 +96,14 @@ pipeline {
   post {
     always {
       script {
-        def testResult = junit "test-results.xml"
-        notifyDiscord(currentBuild.result, lastRunningStage, testResult)
+        // def testResult = junit "test-results.xml"
+        // notifyDiscord(currentBuild.result, lastRunningStage, testResult)
         deleteDir() /* clean up our workspace */
         }
     }
     failure {
       script {
-        notifyDiscordFailure(lastRunningStage)
+        // notifyDiscordFailure(lastRunningStage)
         sh 'exit 1'
       }
     }
