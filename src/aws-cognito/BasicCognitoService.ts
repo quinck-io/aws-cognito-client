@@ -6,9 +6,9 @@ import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-
 import { BasicError } from '../utils/errors'
 
 export type CognitoServiceConfig<
-    SignUpInfo,
-    UserUpdateInfo,
-    UserInfoAtributes,
+    SignUpInfo extends Partial<UserInfoAtributes>,
+    UserUpdateInfo extends Partial<UserInfoAtributes>,
+    UserInfoAtributes extends Record<string, unknown>,
 > = {
     userPoolId: string
     userStructure: UserStructure<UserInfoAtributes>
