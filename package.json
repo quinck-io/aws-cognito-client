@@ -5,8 +5,8 @@
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
-    "lint": "eslint src/ test/",
-    "lint:fix": "eslint src/ test/ --fix",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
     "build": "tsc",
     "test": "mocha",
     "test:junitReporter": "mocha --reporter mocha-junit-reporter",
