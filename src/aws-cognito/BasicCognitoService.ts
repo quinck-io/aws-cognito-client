@@ -2,7 +2,7 @@ import { BasicUserInfo, UserInfo } from '../models/utils/user'
 import { CognitoUserAttribute } from 'amazon-cognito-identity-js'
 import { UserAttributesEntries, UserStructure } from './models'
 import '@quinck/collections'
-import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider'
+import { CognitoIdentityProvider } from '@aws-sdk/client-cognito-identity-provider'
 import { BasicError } from '../utils/errors'
 
 export type CognitoServiceConfig<
@@ -24,7 +24,7 @@ export class BasicCognitoService<
     public static readonly DEFAULT_FIT_INFO: <X>(user: X) => X = x => x
 
     protected readonly userPoolId: string
-    protected readonly cognitoIdentityProviderClient: CognitoIdentityProviderClient
+    protected readonly cognitoIdentityProvider: CognitoIdentityProvider
     protected readonly fitSignUpInfo: (user: SignUpInfo) => SignUpInfo
     protected readonly fitUserUpdateInfo: (
         user: UserUpdateInfo,
@@ -40,9 +40,7 @@ export class BasicCognitoService<
             UserInfoAtributes
         >,
     ) {
-        this.cognitoIdentityProviderClient = new CognitoIdentityProviderClient(
-            {},
-        )
+        this.cognitoIdentityProvider = new CognitoIdentityProvider({})
         this.userStructure = config.userStructure
         this.userAttributes = Object.entries(
             config.userStructure,
