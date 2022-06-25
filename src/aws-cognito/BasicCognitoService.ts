@@ -6,20 +6,20 @@ import { CognitoIdentityProvider } from '@aws-sdk/client-cognito-identity-provid
 import { BasicError } from '../utils/errors'
 
 export type CognitoServiceConfig<
-    SignUpInfo extends Partial<UserInfoAtributes>,
-    UserUpdateInfo extends Partial<UserInfoAtributes>,
-    UserInfoAtributes extends Record<string, unknown>,
+    SignUpInfo extends Partial<UserInfoAttributes>,
+    UserUpdateInfo extends Partial<UserInfoAttributes>,
+    UserInfoAttributes extends Record<string, unknown>,
 > = {
     userPoolId: string
-    userStructure: UserStructure<UserInfoAtributes>
+    userStructure: UserStructure<UserInfoAttributes>
     fitSignUpInfo?: (user: SignUpInfo) => SignUpInfo
     fitUserUpdateInfo?: (user: UserUpdateInfo) => UserUpdateInfo
 }
 
 export class BasicCognitoService<
-    SignUpInfo extends Partial<UserInfoAtributes>,
-    UserUpdateInfo extends Partial<UserInfoAtributes>,
-    UserInfoAtributes extends Record<string, unknown>,
+    SignUpInfo extends Partial<UserInfoAttributes>,
+    UserUpdateInfo extends Partial<UserInfoAttributes>,
+    UserInfoAttributes extends Record<string, unknown>,
 > {
     public static readonly DEFAULT_FIT_INFO: <X>(user: X) => X = x => x
 
@@ -30,21 +30,21 @@ export class BasicCognitoService<
         user: UserUpdateInfo,
     ) => UserUpdateInfo
 
-    private readonly userStructure: UserStructure<UserInfoAtributes>
-    private readonly userAttributes: UserAttributesEntries<UserInfoAtributes>
+    private readonly userStructure: UserStructure<UserInfoAttributes>
+    private readonly userAttributes: UserAttributesEntries<UserInfoAttributes>
 
     public constructor(
         config: CognitoServiceConfig<
             SignUpInfo,
             UserUpdateInfo,
-            UserInfoAtributes
+            UserInfoAttributes
         >,
     ) {
         this.cognitoIdentityProvider = new CognitoIdentityProvider({})
         this.userStructure = config.userStructure
         this.userAttributes = Object.entries(
             config.userStructure,
-        ) as UserAttributesEntries<UserInfoAtributes>
+        ) as UserAttributesEntries<UserInfoAttributes>
         this.fitSignUpInfo =
             config.fitSignUpInfo || BasicCognitoService.DEFAULT_FIT_INFO
         this.fitUserUpdateInfo =
@@ -89,7 +89,7 @@ export class BasicCognitoService<
 
     protected createUserInfoAttributesFromAttributes(
         attributes: CognitoUserAttribute[],
-    ): UserInfoAtributes {
+    ): UserInfoAttributes {
         const attributesByName = attributes.groupBy(
             x => x.Name,
             x => x,
@@ -101,7 +101,7 @@ export class BasicCognitoService<
                 userInfo[key] = this.userStructure[key].parse(attr.Value)
             else userInfo[key] = this.userStructure[key].defaultValue
             return userInfo
-        }, {} as Partial<Record<string, unknown>>) as UserInfoAtributes
+        }, {} as Partial<Record<string, unknown>>) as UserInfoAttributes
     }
 
     protected getBasicUserInfo(username: string): BasicUserInfo {
@@ -111,7 +111,7 @@ export class BasicCognitoService<
     protected createUserInfo(
         username: string,
         attributes: CognitoUserAttribute[],
-    ): UserInfo<UserInfoAtributes> {
+    ): UserInfo<UserInfoAttributes> {
         return {
             ...this.getBasicUserInfo(username),
             ...this.createUserInfoAttributesFromAttributes(attributes),
