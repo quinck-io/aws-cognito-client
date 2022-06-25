@@ -3,6 +3,7 @@ import { CognitoUserAttribute } from 'amazon-cognito-identity-js'
 import { UserAttributesEntries, UserStructure } from './models'
 import '@quinck/collections'
 import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider'
+import { BasicError } from '../utils/errors'
 
 export type CognitoServiceConfig<
     SignUpInfo,
@@ -120,29 +121,7 @@ export class BasicCognitoService<
     }
 
     protected createError(error: unknown): Error {
-        // if (error instanceof Error)
-        //     switch (error.name) {
-        //         case CognitoError.USERNAME_EXIST:
-        //         case CognitoError.ALIAS_EXISTS:
-        //             return new UserAlreadyExistError(error)
-        //         case CognitoError.INVALID_PARAMETER:
-        //         case CognitoError.CODE_MISMATCH:
-        //         case CognitoError.INVALID_PASSWORD:
-        //             return new BadRequestError(error)
-        //         case CognitoError.RESOURCE_NOT_FOUND:
-        //         case CognitoError.USER_NOT_FOUND:
-        //             return new UserNotFoundError(error)
-        //         case CognitoError.NOT_AUTHORIZED:
-        //         case CognitoError.CUSTOM_FORCE_CHANGE_PASSWORD:
-        //             return new UserNotAuthenticatedError(error)
-        //         case CognitoError.USER_NOT_CONFIRMED:
-        //             return new UserNotConfirmedError(error)
-        //         default:
-        //             return new InternalServerError(error)
-        //     }
-        // else if (typeof error === 'string')
-        //     return new InternalServerError(new Error(error))
-        // return new InternalServerError()
-        return new Error()
+        if (error instanceof Error) throw error
+        return new BasicError(error)
     }
 }
