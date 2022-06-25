@@ -48,5 +48,8 @@
   },
   "files": [
     "lib/**/*"
-  ]
+  ],
+  "dependencies": {
+    "@aws-sdk/client-cognito-identity": "^3.118.0"
+  }
 }
