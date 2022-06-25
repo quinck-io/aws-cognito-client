@@ -50,6 +50,7 @@
     "lib/**/*"
   ],
   "dependencies": {
-    "@aws-sdk/client-cognito-identity-provider": "^3.118.0"
+    "@aws-sdk/client-cognito-identity-provider": "^3.118.0",
+    "amazon-cognito-identity-js": "^5.2.9"
   }
 }
