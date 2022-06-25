@@ -1,6 +1,6 @@
 export type KeyOf<T> = keyof T
 
-export type StringKeyOf<T> = Extract<T, string>
+export type StringKeyOf<T> = Extract<keyof T, string>
 
 export type Entries<K extends string, V> = [K, V][]
 

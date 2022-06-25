@@ -18,18 +18,19 @@ export type CognitoServiceConfig<
 export class BasicCognitoService<
     SignUpInfo extends Partial<UserInfoAtributes>,
     UserUpdateInfo extends Partial<UserInfoAtributes>,
-    UserInfoAtributes,
+    UserInfoAtributes extends Record<string, unknown>,
 > {
     public static readonly DEFAULT_FIT_INFO: <X>(user: X) => X = x => x
 
     protected readonly userPoolId: string
     protected readonly cognitoIdentityProviderClient: CognitoIdentityProviderClient
-    private readonly userStructure: UserStructure<UserInfoAtributes>
-    private readonly userAttributes: UserAttributesEntries<UserInfoAtributes>
     protected readonly fitSignUpInfo: (user: SignUpInfo) => SignUpInfo
     protected readonly fitUserUpdateInfo: (
         user: UserUpdateInfo,
     ) => UserUpdateInfo
+
+    private readonly userStructure: UserStructure<UserInfoAtributes>
+    private readonly userAttributes: UserAttributesEntries<UserInfoAtributes>
 
     public constructor(
         config: CognitoServiceConfig<
