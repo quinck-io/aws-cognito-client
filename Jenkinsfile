@@ -37,14 +37,14 @@ pipeline {
       }
     }
         
-    // stage("Test") {
-    //   steps {
-    //     script {
-    //       lastRunningStage="Test"
-    //     }
-    //     sh 'npm run test:junitReporter'
-    //   }
-    // }
+    stage("Test") {
+      steps {
+        script {
+          lastRunningStage="Test"
+        }
+        sh 'npm run test:junitReporter'
+      }
+    }
 
     stage("Build") {
       when {
