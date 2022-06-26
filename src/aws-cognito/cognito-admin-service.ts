@@ -10,10 +10,10 @@ import {
 import { CompleteUserInfo, UserStatus } from '../models/utils/user'
 import {
     AdminCreateUserCredentials,
-    AdminUserManager,
+    AdminUserService,
     SearchUsersParameters,
-} from '../models/components/AdminUserManager'
-import { BasicCognitoService } from './BasicCognitoService'
+} from '../models/components/admin-user-service'
+import { BasicCognitoService } from './basic-cognito-service'
 import '@quinck/collections'
 import { FilledUserType } from './models/users'
 import { UserNotFoundError } from './errors'
@@ -25,7 +25,7 @@ export class CognitoAdminService<
         UserInfoAttributes extends Record<string, unknown>,
     >
     extends BasicCognitoService<SignUpInfo, UserUpdateInfo, UserInfoAttributes>
-    implements AdminUserManager<SignUpInfo, UserUpdateInfo, UserInfoAttributes>
+    implements AdminUserService<SignUpInfo, UserUpdateInfo, UserInfoAttributes>
 {
     public async forceEmailVerification(username: string): Promise<void> {
         await this.forceAttributeVerification(username, 'email_verified')

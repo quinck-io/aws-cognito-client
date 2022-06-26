@@ -3,11 +3,11 @@ import { BasicUserInfo, Credentials, UserInfo } from '../models/utils/user'
 import {
     BasicCognitoService,
     CognitoServiceConfig,
-} from './BasicCognitoService'
-import { RichCognitoUser } from './RichCognitoUser'
+} from './basic-cognito-service'
+import { RichCognitoUser } from './rich-cognito-user'
 import '@quinck/collections'
 import { UserToken } from '../models/utils/auth'
-import { UserService } from '../models/components/UserService'
+import { UserService } from '../models/components/user-service'
 import { usernameFromUserToken } from '../utils/auth'
 
 export type CognitoUserServiceConfig = {

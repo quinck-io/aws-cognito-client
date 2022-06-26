@@ -1,6 +1,6 @@
 import { CompleteUserInfo } from '../utils/user'
 
-export interface AdminUserManager<
+export interface AdminUserService<
     SignUpInfo extends Partial<UserInfoAttributes>,
     UserUpdateInfo extends Partial<UserInfoAttributes>,
     UserInfoAttributes extends Record<string, unknown>,

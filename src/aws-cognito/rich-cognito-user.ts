@@ -14,7 +14,7 @@ import {
     CustomAuthChallengeResponseStatus,
     CustomAuthChallengeParameters,
     CompletedCustomAuthChallengeResponse,
-} from '../models/components/AuthService'
+} from '../models/components/auth-service'
 import { RefreshAuthToken, UserToken } from '../models/utils/auth'
 import { Credentials, LoginAdditionalData } from '../models/utils/user'
 import { ForceChangePasswordException } from './errors'

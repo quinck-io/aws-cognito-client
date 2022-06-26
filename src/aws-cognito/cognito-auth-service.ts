@@ -1,5 +1,5 @@
 import { CognitoUserPool } from 'amazon-cognito-identity-js'
-import { RichCognitoUser } from './RichCognitoUser'
+import { RichCognitoUser } from './rich-cognito-user'
 import { Credentials, LoginAdditionalData } from '../models/utils/user'
 import {
     AuthService,
@@ -7,11 +7,11 @@ import {
     CustomAuthChallengeResponse,
     ResetPasswordData,
     UpdateCredentialsInfo,
-} from '../models/components/AuthService'
+} from '../models/components/auth-service'
 import {
     BasicCognitoService,
     CognitoServiceConfig,
-} from './BasicCognitoService'
+} from './basic-cognito-service'
 import { RefreshAuthToken, UserToken } from '../models/utils/auth'
 
 type GenericUserAttributes = Record<string, unknown>
