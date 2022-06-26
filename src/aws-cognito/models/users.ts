@@ -1,18 +1,14 @@
-import { Entries, StringKeyOf } from '../utils/types'
+import { Entries, StringKeyOf } from '../../utils/types'
 
 import {
     UserType,
     AttributeType,
 } from '@aws-sdk/client-cognito-identity-provider'
+import { CognitoAttributeName } from './attributes'
 
-export type VerifiableAttribute = 'email_verified' | 'phone_number_verified'
-
-export type UserStructure<
-    UserInfoAtributes,
-    CognitoAttributeName extends string = string,
-> = Record<
+export type UserStructure<UserInfoAtributes> = Record<
     StringKeyOf<UserInfoAtributes>,
-    UserAttribute<unknown, CognitoAttributeName>
+    UserAttribute<unknown>
 >
 
 export type UserAttributesEntries<UserInfoAtributes> = Entries<
@@ -20,10 +16,7 @@ export type UserAttributesEntries<UserInfoAtributes> = Entries<
     UserAttribute<unknown>
 >
 
-export interface UserAttribute<
-    AttributeType,
-    CognitoAttributeName extends string = string,
-> {
+export interface UserAttribute<AttributeType> {
     readonly cognitoName: CognitoAttributeName
     readonly parse: (x: string) => AttributeType
     readonly stringify: (x: AttributeType) => string

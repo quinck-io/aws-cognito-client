@@ -1,6 +1,6 @@
 import { BasicUserInfo, UserInfo } from '../models/utils/user'
 import { CognitoUserAttribute } from 'amazon-cognito-identity-js'
-import { UserAttributesEntries, UserStructure } from './models'
+import { UserAttributesEntries, UserStructure } from './models/users'
 import '@quinck/collections'
 import { CognitoIdentityProvider } from '@aws-sdk/client-cognito-identity-provider'
 import { BasicError } from '../utils/errors'

@@ -15,8 +15,9 @@ import {
 } from '../models/components/AdminUserManager'
 import { BasicCognitoService } from './BasicCognitoService'
 import '@quinck/collections'
-import { FilledUserType, VerifiableAttribute } from './models'
+import { FilledUserType } from './models/users'
 import { UserNotFoundError } from './errors'
+import { VerifiableAttribute } from './models/attributes'
 
 export class CognitoAdminService<
         SignUpInfo extends Partial<UserInfoAttributes>,
