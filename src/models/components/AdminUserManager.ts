@@ -1,31 +1,31 @@
 import { CompleteUserInfo } from '../utils/user'
 
 export interface AdminUserManager<
-    SignUpInfo,
-    UserUpdateInfo,
-    UserInfoAtributes,
+    SignUpInfo extends Partial<UserInfoAttributes>,
+    UserUpdateInfo extends Partial<UserInfoAttributes>,
+    UserInfoAttributes extends Record<string, unknown>,
 > {
     createUser(
         credentials: AdminCreateUserCredentials,
         user: SignUpInfo,
         groups: string[],
     ): Promise<void>
-    getUser(username: string): Promise<CompleteUserInfo<UserInfoAtributes>>
+    getUser(username: string): Promise<CompleteUserInfo<UserInfoAttributes>>
     updateUser(username: string, user: UserUpdateInfo): Promise<void>
     deleteUser(username: string): Promise<void>
     addUserToGroup(username: string, group: string): Promise<void>
     removeUserFromGroup(username: string, group: string): Promise<void>
     disableUser(username: string): Promise<void>
     enableUser(username: string): Promise<void>
-    getAllUsers(): Promise<CompleteUserInfo<UserInfoAtributes>[]>
+    getAllUsers(): Promise<CompleteUserInfo<UserInfoAttributes>[]>
     searchUsers(
         params: SearchUsersParameters,
-    ): Promise<CompleteUserInfo<UserInfoAtributes>[]>
+    ): Promise<CompleteUserInfo<UserInfoAttributes>[]>
     searchUsersInGroup(
         group: string,
         params: SearchUsersParameters,
-    ): Promise<CompleteUserInfo<UserInfoAtributes>[]>
-    getUserByEmail(email: string): Promise<CompleteUserInfo<UserInfoAtributes>>
+    ): Promise<CompleteUserInfo<UserInfoAttributes>[]>
+    getUserByEmail(email: string): Promise<CompleteUserInfo<UserInfoAttributes>>
     forceEmailVerification(username: string): Promise<void>
     forcePhoneNumberVerification(username: string): Promise<void>
 }
