@@ -11,6 +11,7 @@ export interface AdminUserService<
         groups: string[],
     ): Promise<void>
     getUser(username: string): Promise<CompleteUserInfo<UserInfoAttributes>>
+    getUserGroups(username: string): Promise<string[]>
     updateUser(username: string, user: UserUpdateInfo): Promise<void>
     deleteUser(username: string): Promise<void>
     addUserToGroup(username: string, group: string): Promise<void>

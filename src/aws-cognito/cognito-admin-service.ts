@@ -200,7 +200,7 @@ export class CognitoAdminService<
         }
     }
 
-    private async getUserGroups(username: string): Promise<string[]> {
+    public async getUserGroups(username: string): Promise<string[]> {
         try {
             const { Groups } =
                 await this.cognitoIdentityProvider.adminListGroupsForUser({
