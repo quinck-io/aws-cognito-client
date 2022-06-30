@@ -5,7 +5,6 @@ export interface BasicUserInfo {
 export type UserInfo<UserInfoAttributes> = UserInfoAttributes & BasicUserInfo
 
 export type UserProfileRelatedInformation = {
-    groups: string[]
     additionaInformation?: UserAdditionalInfo
 }
 

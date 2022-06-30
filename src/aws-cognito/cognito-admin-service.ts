@@ -187,10 +187,8 @@ export class CognitoAdminService<
             Enabled,
         } = user
         const attributes = await this.parseUserAttributes(Attributes)
-        const groups = await this.getUserGroups(Username)
         return {
             ...this.createUserInfo(Username, attributes),
-            groups,
             additionaInformation: {
                 isEnabled: Enabled,
                 createdDate: UserCreateDate,

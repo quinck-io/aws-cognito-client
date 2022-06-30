@@ -8,7 +8,7 @@ export interface AdminUserService<
     createUser(
         credentials: AdminCreateUserCredentials,
         user: SignUpInfo,
-        groups: string[],
+        groups?: string[],
     ): Promise<void>
     getUser(username: string): Promise<CompleteUserInfo<UserInfoAttributes>>
     getUserGroups(username: string): Promise<string[]>
