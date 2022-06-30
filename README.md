@@ -1,5 +1,5 @@
 # aws-cognito-client
-Allows extra operations on JavaScript collections: Array, Map and Set.
+Provides a user attributes generic cognito client.
 
 ## Overview
 
