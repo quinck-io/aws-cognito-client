@@ -2,8 +2,6 @@ import { CognitoUserAttribute } from 'amazon-cognito-identity-js'
 import {
     AdminGetUserResponse,
     AttributeType,
-    ListUsersCommandOutput,
-    ListUsersInGroupCommandOutput,
     UserStatusType,
     UserType,
 } from '@aws-sdk/client-cognito-identity-provider'
@@ -18,6 +16,8 @@ import '@quinck/collections'
 import { FilledUserType } from './models/users'
 import { UserNotFoundError } from './errors'
 import { VerifiableAttribute } from './models/attributes'
+
+const COGNITO_LIST_LIMIT = 60
 
 export class CognitoAdminService<
         SignUpInfo extends Partial<UserInfoAttributes>,
@@ -93,18 +93,18 @@ export class CognitoAdminService<
         params: SearchUsersParameters,
     ): Promise<CompleteUserInfo<UserInfoAttributes>[]> {
         return this.tryDo(async () => {
-            const { Users } = await this._getAllUsers()
-            return this.parseUsersSearchResult(Users)
+            const users = await this.getAllUsersAllPages()
+            return this.parseUsersSearchResult(users)
         })
     }
 
-    searchUsersInGroup(
+    public searchUsersInGroup(
         group: string,
         params: SearchUsersParameters,
     ): Promise<CompleteUserInfo<UserInfoAttributes>[]> {
         return this.tryDo(async () => {
-            const { Users } = await this.getAllUsersByGroup(group)
-            return this.parseUsersSearchResult(Users)
+            const users = await this.getAllUsersByGroupAllPages(group)
+            return this.parseUsersSearchResult(users)
         })
     }
 
@@ -128,6 +128,38 @@ export class CognitoAdminService<
             return this.parseUser(user as FilledUserType)
         }
         throw new UserNotFoundError()
+    }
+
+    private async getAllUsersAllPages(
+        currentUsers: UserType[] = [],
+        paginationToken?: string,
+    ): Promise<UserType[]> {
+        const { PaginationToken, Users } =
+            await this.cognitoIdentityProvider.listUsers({
+                UserPoolId: this.userPoolId,
+                PaginationToken: paginationToken,
+                Limit: COGNITO_LIST_LIMIT,
+            })
+        const users = currentUsers.concat(Users || [])
+        if (!PaginationToken) return users
+        else return this.getAllUsersAllPages(users, PaginationToken)
+    }
+
+    private async getAllUsersByGroupAllPages(
+        groupName: string,
+        currentUsers: UserType[] = [],
+        paginationToken?: string,
+    ): Promise<UserType[]> {
+        const { NextToken, Users } =
+            await this.cognitoIdentityProvider.listUsersInGroup({
+                UserPoolId: this.userPoolId,
+                GroupName: groupName,
+                NextToken: paginationToken,
+                Limit: COGNITO_LIST_LIMIT,
+            })
+        const users = currentUsers.concat(Users || [])
+        if (!NextToken) return users
+        else return this.getAllUsersByGroupAllPages(groupName, users, NextToken)
     }
 
     private async parseUsersSearchResult(
@@ -166,21 +198,6 @@ export class CognitoAdminService<
                 status: this.mapStatus(UserStatus),
             },
         }
-    }
-
-    private async _getAllUsers(): Promise<ListUsersCommandOutput> {
-        return this.cognitoIdentityProvider.listUsers({
-            UserPoolId: this.userPoolId,
-        })
-    }
-
-    private async getAllUsersByGroup(
-        groupName: string,
-    ): Promise<ListUsersInGroupCommandOutput> {
-        return this.cognitoIdentityProvider.listUsersInGroup({
-            UserPoolId: this.userPoolId,
-            GroupName: groupName,
-        })
     }
 
     private async getUserGroups(username: string): Promise<string[]> {
