@@ -7,3 +7,7 @@ export class ForceChangePasswordException extends BasicError {
 export class UserNotFoundError extends BasicError {
     public readonly name = UserNotFoundError.name
 }
+
+export class UserNotRetrievedError extends BasicError {
+    public readonly name = UserNotRetrievedError.name
+}

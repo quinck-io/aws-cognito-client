@@ -14,7 +14,7 @@ import {
 import { BasicCognitoService } from './basic-cognito-service'
 import '@quinck/collections'
 import { FilledUserType } from './models/users'
-import { UserNotFoundError } from './errors'
+import { UserNotFoundError, UserNotRetrievedError } from './errors'
 import { VerifiableAttribute } from './models/attributes'
 
 const COGNITO_LIST_LIMIT = 60
@@ -242,7 +242,7 @@ export class CognitoAdminService<
                     UserStatus,
                 })
             }
-            throw new Error('CUSTOM_NO_ATTRIBUTES_PROVIDED') //TODO error correct
+            throw new UserNotRetrievedError()
         } catch (error) {
             throw this.createError(error as Error)
         }
