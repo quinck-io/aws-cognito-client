@@ -2,7 +2,7 @@ import { CognitoServiceConfig } from '../aws-cognito/basic-cognito-service'
 import {
     CognitoUserService,
     CognitoUserServiceConfig,
-} from '../aws-cognito/cgnito-user-service'
+} from '../aws-cognito/cognito-user-service'
 import { UserService } from '../models/components/user-service'
 import { InvalidParameterError } from './errors'
 
