@@ -1,9 +1,23 @@
-import { BasicUserInfo, UserInfo } from '../models/utils/user'
-import { CognitoUserAttribute } from 'amazon-cognito-identity-js'
-import { UserAttributesEntries, UserStructure } from './models/users'
+import {
+    CognitoIdentityProvider,
+    InvalidPasswordException,
+    UnauthorizedException,
+    UsernameExistsException,
+    UserNotFoundException,
+} from '@aws-sdk/client-cognito-identity-provider'
 import '@quinck/collections'
-import { CognitoIdentityProvider } from '@aws-sdk/client-cognito-identity-provider'
-import { BasicError } from '../utils/errors'
+import { CognitoUserAttribute } from 'amazon-cognito-identity-js'
+import { BasicUserInfo, UserInfo } from '../models/utils/user'
+import {
+    ForceChangePasswordException,
+    UnauthorizedError,
+    UnknownInternalError,
+    UserAlreadyExistsError,
+    UserNotFoundError,
+    UserNotRetrievedError,
+    WrongPasswordError,
+} from './errors'
+import { UserAttributesEntries, UserStructure } from './models/users'
 
 export type CognitoServiceConfig<
     SignUpInfo extends Partial<UserInfoAttributes>,
@@ -119,7 +133,22 @@ export class BasicCognitoService<
     }
 
     protected createError(error: unknown): Error {
-        if (error instanceof Error) throw error
-        return new BasicError(error)
+        if (
+            error instanceof UserNotFoundException ||
+            error instanceof UserNotFoundError
+        )
+            throw new UserNotFoundError()
+        if (error instanceof InvalidPasswordException)
+            throw new WrongPasswordError()
+        if (error instanceof UsernameExistsException)
+            throw new UserAlreadyExistsError()
+        if (error instanceof UnauthorizedException)
+            throw new UnauthorizedError()
+        if (error instanceof ForceChangePasswordException)
+            throw new ForceChangePasswordException()
+        if (error instanceof UserNotRetrievedError)
+            throw new UserNotRetrievedError()
+
+        return new UnknownInternalError()
     }
 }
