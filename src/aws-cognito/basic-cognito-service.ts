@@ -1,6 +1,6 @@
 import {
     CognitoIdentityProvider,
-    InvalidPasswordException,
+    NotAuthorizedException,
     UnauthorizedException,
     UsernameExistsException,
     UserNotFoundException,
@@ -15,7 +15,7 @@ import {
     UserAlreadyExistsError,
     UserNotFoundError,
     UserNotRetrievedError,
-    WrongPasswordError,
+    WrongUsernameOrPasswordError,
 } from './errors'
 import { UserAttributesEntries, UserStructure } from './models/users'
 
@@ -137,17 +137,17 @@ export class BasicCognitoService<
             error instanceof UserNotFoundException ||
             error instanceof UserNotFoundError
         )
-            throw new UserNotFoundError()
-        if (error instanceof InvalidPasswordException)
-            throw new WrongPasswordError()
+            return new UserNotFoundError()
+        if (error instanceof NotAuthorizedException)
+            return new WrongUsernameOrPasswordError(error.message)
         if (error instanceof UsernameExistsException)
-            throw new UserAlreadyExistsError()
+            return new UserAlreadyExistsError()
         if (error instanceof UnauthorizedException)
-            throw new UnauthorizedError()
+            return new UnauthorizedError()
         if (error instanceof ForceChangePasswordException)
-            throw new ForceChangePasswordException()
+            return new ForceChangePasswordException()
         if (error instanceof UserNotRetrievedError)
-            throw new UserNotRetrievedError()
+            return new UserNotRetrievedError()
 
         return new UnknownInternalError()
     }

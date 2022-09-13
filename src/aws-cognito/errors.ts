@@ -8,11 +8,11 @@ export class UserNotRetrievedError extends BasicError {
     public readonly name = UserNotRetrievedError.name
 }
 
-export class WrongPasswordError extends BasicError {
-    constructor() {
-        super(new Error('Invalid user password'))
+export class WrongUsernameOrPasswordError extends BasicError {
+    constructor(message?: string) {
+        super(new Error(message))
     }
-    public readonly name = WrongPasswordError.name
+    public readonly name = WrongUsernameOrPasswordError.name
 }
 
 export class UnauthorizedError extends BasicError {
@@ -24,7 +24,7 @@ export class UnauthorizedError extends BasicError {
 
 export class UserAlreadyExistsError extends BasicError {
     constructor() {
-        super(new Error('User with given username already exists'))
+        super(new Error('User with given username/email already exists'))
     }
     public readonly name = UserAlreadyExistsError.name
 }
