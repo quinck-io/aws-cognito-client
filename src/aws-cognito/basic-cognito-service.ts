@@ -133,22 +133,24 @@ export class BasicCognitoService<
     }
 
     protected createError(error: unknown): Error {
-        if (
-            error instanceof UserNotFoundException ||
-            error instanceof UserNotFoundError
-        )
-            return new UserNotFoundError()
-        if (error instanceof NotAuthorizedException)
-            return new WrongUsernameOrPasswordError(error.message)
-        if (error instanceof UsernameExistsException)
-            return new UserAlreadyExistsError()
-        if (error instanceof UnauthorizedException)
-            return new UnauthorizedError()
-        if (error instanceof ForceChangePasswordException)
-            return new ForceChangePasswordException()
-        if (error instanceof UserNotRetrievedError)
-            return new UserNotRetrievedError()
+        if (!(error instanceof Error)) return new UnknownInternalError()
 
-        return new UnknownInternalError()
+        switch (error.name) {
+            case UserNotFoundException.name:
+            case UserNotFoundError.name:
+                return new UserNotFoundError()
+            case NotAuthorizedException.name:
+                return new WrongUsernameOrPasswordError(error.message)
+            case UsernameExistsException.name:
+                return new UserAlreadyExistsError()
+            case UnauthorizedException.name:
+                return new UnauthorizedError()
+            case ForceChangePasswordException.name:
+                return new ForceChangePasswordException()
+            case UserNotRetrievedError.name:
+                return new UserNotRetrievedError()
+            default:
+                return new UnknownInternalError()
+        }
     }
 }
