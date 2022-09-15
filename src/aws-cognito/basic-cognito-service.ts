@@ -1,5 +1,6 @@
 import {
     CognitoIdentityProvider,
+    InvalidPasswordException,
     NotAuthorizedException,
     UnauthorizedException,
     UsernameExistsException,
@@ -10,6 +11,7 @@ import { CognitoUserAttribute } from 'amazon-cognito-identity-js'
 import { BasicUserInfo, UserInfo } from '../models/utils/user'
 import {
     ForceChangePasswordException,
+    InvalidPasswordError,
     UnauthorizedError,
     UnknownInternalError,
     UserAlreadyExistsError,
@@ -134,7 +136,6 @@ export class BasicCognitoService<
 
     protected createError(error: unknown): Error {
         if (!(error instanceof Error)) return new UnknownInternalError()
-        console.error(JSON.stringify(error))
         switch (error.name) {
             case UserNotFoundException.name:
             case UserNotFoundError.name:
@@ -149,6 +150,8 @@ export class BasicCognitoService<
                 return new ForceChangePasswordException()
             case UserNotRetrievedError.name:
                 return new UserNotRetrievedError()
+            case InvalidPasswordException.name:
+                return new InvalidPasswordError(error.message)
             default:
                 return new UnknownInternalError()
         }
