@@ -134,7 +134,7 @@ export class BasicCognitoService<
 
     protected createError(error: unknown): Error {
         if (!(error instanceof Error)) return new UnknownInternalError()
-
+        console.error(JSON.stringify(error))
         switch (error.name) {
             case UserNotFoundException.name:
             case UserNotFoundError.name:
