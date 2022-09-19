@@ -1,21 +1,21 @@
-import { CognitoUserAttribute } from 'amazon-cognito-identity-js'
 import {
     AdminGetUserResponse,
     AttributeType,
     UserStatusType,
     UserType,
 } from '@aws-sdk/client-cognito-identity-provider'
-import { CompleteUserInfo, UserStatus } from '../models/utils/user'
+import '@quinck/collections'
+import { CognitoUserAttribute } from 'amazon-cognito-identity-js'
 import {
     AdminCreateUserCredentials,
     AdminUserService,
     SearchUsersParameters,
 } from '../models/components/admin-user-service'
+import { CompleteUserInfo, UserStatus } from '../models/utils/user'
 import { BasicCognitoService } from './basic-cognito-service'
-import '@quinck/collections'
-import { FilledUserType } from './models/users'
 import { UserNotFoundError, UserNotRetrievedError } from './errors'
 import { VerifiableAttribute } from './models/attributes'
+import { FilledUserType } from './models/users'
 
 const COGNITO_LIST_LIMIT = 60
 
@@ -55,6 +55,19 @@ export class CognitoAdminService<
             for (const group of groups) {
                 await this._addUserToGroup(username, group)
             }
+        })
+    }
+
+    public async updateUserPassword(
+        username: string,
+        password: string,
+    ): Promise<void> {
+        return this.tryDo(async () => {
+            this.cognitoIdentityProvider.adminSetUserPassword({
+                Username: username,
+                Password: password,
+                UserPoolId: this.userPoolId,
+            })
         })
     }
 

@@ -29,6 +29,7 @@ export interface AdminUserService<
     getUserByEmail(email: string): Promise<CompleteUserInfo<UserInfoAttributes>>
     forceEmailVerification(username: string): Promise<void>
     forcePhoneNumberVerification(username: string): Promise<void>
+    updateUserPassword(username: string, password: string): Promise<void>
 }
 
 export type AdminCreateUserCredentials = {
