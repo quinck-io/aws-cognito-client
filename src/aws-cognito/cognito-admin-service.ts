@@ -1,21 +1,22 @@
-import { CognitoUserAttribute } from 'amazon-cognito-identity-js'
 import {
     AdminGetUserResponse,
     AttributeType,
     UserStatusType,
     UserType,
 } from '@aws-sdk/client-cognito-identity-provider'
-import { CompleteUserInfo, UserStatus } from '../models/utils/user'
+import '@quinck/collections'
+import { CognitoUserAttribute } from 'amazon-cognito-identity-js'
 import {
     AdminCreateUserCredentials,
     AdminUserService,
     SearchUsersParameters,
 } from '../models/components/admin-user-service'
+import { UpdateCredentialsInfo } from '../models/components/auth-service'
+import { CompleteUserInfo, UserStatus } from '../models/utils/user'
 import { BasicCognitoService } from './basic-cognito-service'
-import '@quinck/collections'
-import { FilledUserType } from './models/users'
 import { UserNotFoundError, UserNotRetrievedError } from './errors'
 import { VerifiableAttribute } from './models/attributes'
+import { FilledUserType } from './models/users'
 
 const COGNITO_LIST_LIMIT = 60
 
@@ -27,6 +28,21 @@ export class CognitoAdminService<
     extends BasicCognitoService<SignUpInfo, UserUpdateInfo, UserInfoAttributes>
     implements AdminUserService<SignUpInfo, UserUpdateInfo, UserInfoAttributes>
 {
+    public async setUserPassword(
+        username: string,
+        updatePassword: UpdateCredentialsInfo,
+    ): Promise<void> {
+        const { newPassword } = updatePassword
+        await this.tryDo(async () => {
+            await this.cognitoIdentityProvider.adminSetUserPassword({
+                UserPoolId: this.userPoolId,
+                Username: username,
+                Password: newPassword,
+                Permanent: true,
+            })
+        })
+    }
+
     public async forceEmailVerification(username: string): Promise<void> {
         await this.forceAttributeVerification(username, 'email_verified')
     }
