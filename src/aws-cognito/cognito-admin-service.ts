@@ -74,6 +74,19 @@ export class CognitoAdminService<
         })
     }
 
+    public async updateUserPassword(
+        username: string,
+        password: string,
+    ): Promise<void> {
+        return this.tryDo(async () => {
+            this.cognitoIdentityProvider.adminSetUserPassword({
+                Username: username,
+                Password: password,
+                UserPoolId: this.userPoolId,
+            })
+        })
+    }
+
     public async addUserToGroup(
         username: string,
         group: string,

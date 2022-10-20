@@ -36,6 +36,13 @@ export class UserNotFoundError extends BasicError {
     public readonly name = UserNotFoundError.name
 }
 
+export class InvalidPasswordError extends BasicError {
+    constructor(message?: string) {
+        super(new Error(message))
+    }
+    public readonly name = InvalidPasswordError.name
+}
+
 export class UnknownInternalError extends BasicError {
     constructor() {
         super(new Error('Unkown error'))
