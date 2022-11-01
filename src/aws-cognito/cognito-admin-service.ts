@@ -1,11 +1,9 @@
 import {
     AdminGetUserResponse,
-    AttributeType,
     UserStatusType,
     UserType,
 } from '@aws-sdk/client-cognito-identity-provider'
 import '@quinck/collections'
-import { CognitoUserAttribute } from 'amazon-cognito-identity-js'
 import {
     AdminCreateUserCredentials,
     AdminUserService,
@@ -204,9 +202,9 @@ export class CognitoAdminService<
         return []
     }
 
-    private async parseUser(
+    private parseUser(
         user: FilledUserType,
-    ): Promise<CompleteUserInfo<UserInfoAttributes>> {
+    ): CompleteUserInfo<UserInfoAttributes> {
         const {
             Attributes,
             Username,
@@ -215,7 +213,7 @@ export class CognitoAdminService<
             UserStatus,
             Enabled,
         } = user
-        const attributes = await this.parseUserAttributes(Attributes)
+        const attributes = this.parseUserAttributes(Attributes)
         return {
             ...this.createUserInfo(Username, attributes),
             additionaInformation: {
@@ -300,19 +298,6 @@ export class CognitoAdminService<
             default:
                 return UserStatus.UNKNOWN
         }
-    }
-
-    private async parseUserAttributes(
-        attributes: AttributeType[],
-    ): Promise<CognitoUserAttribute[]> {
-        return attributes.singleCollect(
-            attr => attr.Name && attr.Value,
-            ({ Name, Value }) =>
-                new CognitoUserAttribute({
-                    Name: Name as string,
-                    Value: Value || '',
-                }),
-        )
     }
 
     public async updateUser(

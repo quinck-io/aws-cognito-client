@@ -1,14 +1,11 @@
-import { ISignUpResult, CognitoUserPool } from 'amazon-cognito-identity-js'
-import { BasicUserInfo, Credentials, UserInfo } from '../models/utils/user'
+import '@quinck/collections'
+import { UserService } from '../models/components/user-service'
+import { UserToken } from '../models/utils/auth'
+import { Credentials, UserInfo } from '../models/utils/user'
 import {
     BasicCognitoService,
     CognitoServiceConfig,
 } from './basic-cognito-service'
-import { RichCognitoUser } from './rich-cognito-user'
-import '@quinck/collections'
-import { UserToken } from '../models/utils/auth'
-import { UserService } from '../models/components/user-service'
-import { usernameFromUserToken } from '../utils/auth'
 
 export type CognitoUserServiceConfig = {
     clientId: string
@@ -22,7 +19,7 @@ export class CognitoUserService<
     extends BasicCognitoService<SignUpInfo, UserUpdateInfo, UserInfoAttributes>
     implements UserService<SignUpInfo, UserUpdateInfo, UserInfoAttributes>
 {
-    private readonly userPool: CognitoUserPool
+    private readonly clientId: string
 
     constructor(
         config: CognitoServiceConfig<
@@ -33,41 +30,33 @@ export class CognitoUserService<
             CognitoUserServiceConfig,
     ) {
         super(config)
-        this.userPool = new CognitoUserPool({
-            UserPoolId: config.userPoolId,
-            ClientId: config.clientId,
-        })
+        this.clientId = config.clientId
     }
 
-    public signUp(
-        credentials: Credentials,
-        user: SignUpInfo,
-    ): Promise<BasicUserInfo> {
+    public signUp(credentials: Credentials, user: SignUpInfo): Promise<void> {
         return this.tryDo(async () => {
-            const data = await new Promise<ISignUpResult>((resolve, reject) => {
-                const attributes = this.createAttributesFromObject(
-                    this.fitSignUpInfo(user),
-                    false,
-                )
-                this.userPool.signUp(
-                    credentials.username,
-                    credentials.password,
-                    attributes,
-                    [],
-                    (err, result) => {
-                        if (err || !result) reject(err)
-                        else resolve(result)
-                    },
-                )
+            const attributes = this.createAttributesFromObject(
+                this.fitSignUpInfo(user),
+                false,
+            )
+            const { password, username } = credentials
+            const { UserSub } = await this.cognitoIdentityProvider.signUp({
+                Username: username,
+                Password: password,
+                UserAttributes: attributes,
+                ClientId: this.clientId,
             })
-            return this.getBasicUserInfo(data.user.getUsername())
+            console.log('SUB: ', UserSub)
         })
     }
 
     public async confirmSignUp(username: string, code: string): Promise<void> {
         return this.tryDo(async () => {
-            const user = RichCognitoUser.createUser(this.userPool, username)
-            await user.confirmRegistrationPromise(code)
+            await this.cognitoIdentityProvider.confirmSignUp({
+                ClientId: this.clientId,
+                ConfirmationCode: code,
+                Username: username,
+            })
         })
     }
 
@@ -75,11 +64,12 @@ export class CognitoUserService<
         token: UserToken,
     ): Promise<UserInfo<UserInfoAttributes>> {
         return this.tryDo(async () => {
-            const user = RichCognitoUser.createUser(this.userPool)
-            user.setSignInUserSessionByToken(token)
-            const username = usernameFromUserToken(token)
-            const attributes = await user.getUserAttributesPromise()
-            return this.createUserInfo(username, attributes)
+            const { Username, UserAttributes } =
+                await this.cognitoIdentityProvider.getUser({
+                    AccessToken: token.accessToken,
+                })
+            const attributes = this.parseUserAttributes(UserAttributes ?? [])
+            return this.createUserInfo(Username ?? '', attributes)
         })
     }
 
@@ -99,9 +89,9 @@ export class CognitoUserService<
 
     public deleteUser(token: UserToken): Promise<void> {
         return this.tryDo(async () => {
-            const user = RichCognitoUser.createUser(this.userPool)
-            user.setSignInUserSessionByToken(token)
-            await user.deleteUserPromise()
+            await this.cognitoIdentityProvider.deleteUser({
+                AccessToken: token.accessToken,
+            })
         })
     }
 }

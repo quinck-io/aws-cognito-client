@@ -1,4 +1,5 @@
 import {
+    AttributeType,
     CognitoIdentityProvider,
     InvalidPasswordException,
     NotAuthorizedException,
@@ -132,6 +133,19 @@ export class BasicCognitoService<
             ...this.getBasicUserInfo(username),
             ...this.createUserInfoAttributesFromAttributes(attributes),
         }
+    }
+
+    protected parseUserAttributes(
+        attributes: AttributeType[],
+    ): CognitoUserAttribute[] {
+        return attributes.singleCollect(
+            attr => attr.Name && attr.Value,
+            ({ Name, Value }) =>
+                new CognitoUserAttribute({
+                    Name: Name as string,
+                    Value: Value || '',
+                }),
+        )
     }
 
     protected createError(error: unknown): Error {
