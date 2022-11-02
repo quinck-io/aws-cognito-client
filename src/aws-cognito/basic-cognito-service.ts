@@ -10,6 +10,7 @@ import {
 import '@quinck/collections'
 import { CognitoUserAttribute } from 'amazon-cognito-identity-js'
 import { BasicUserInfo, UserInfo } from '../models/utils/user'
+import { BasicError } from '../utils/errors'
 import {
     ForceChangePasswordException,
     InvalidPasswordError,
@@ -150,6 +151,7 @@ export class BasicCognitoService<
 
     protected createError(error: unknown): Error {
         if (!(error instanceof Error)) return new UnknownInternalError()
+        if (error instanceof BasicError) return error
         switch (error.name) {
             case UserNotFoundException.name:
             case UserNotFoundError.name:
