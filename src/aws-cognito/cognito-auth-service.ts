@@ -1,6 +1,8 @@
+import {
+    AuthenticationResultType,
+    AuthFlowType,
+} from '@aws-sdk/client-cognito-identity-provider'
 import { CognitoUserPool } from 'amazon-cognito-identity-js'
-import { RichCognitoUser } from './rich-cognito-user'
-import { Credentials, LoginAdditionalData } from '../models/utils/user'
 import {
     AuthService,
     CompletedCustomAuthChallengeResponse,
@@ -8,11 +10,14 @@ import {
     ResetPasswordData,
     UpdateCredentialsInfo,
 } from '../models/components/auth-service'
+import { RefreshAuthToken, UserToken } from '../models/utils/auth'
+import { Credentials, LoginAdditionalData } from '../models/utils/user'
 import {
     BasicCognitoService,
     CognitoServiceConfig,
 } from './basic-cognito-service'
-import { RefreshAuthToken, UserToken } from '../models/utils/auth'
+import { UnauthorizedError } from './errors'
+import { RichCognitoUser } from './rich-cognito-user'
 
 type GenericUserAttributes = Record<string, unknown>
 
@@ -33,6 +38,7 @@ export class CognitoAuthService
     implements AuthService
 {
     protected readonly userPool: CognitoUserPool
+    private readonly clientId: string
 
     constructor(config: CognitoAuthServiceConfig) {
         super(config)
@@ -40,6 +46,7 @@ export class CognitoAuthService
             UserPoolId: config.userPoolId,
             ClientId: config.clientId,
         })
+        this.clientId = config.clientId
     }
     public async verifyCustomAuthChallenge(
         username: string,
@@ -55,7 +62,20 @@ export class CognitoAuthService
     public async initCustomAuthChallenge(
         username: string,
     ): Promise<CustomAuthChallengeResponse> {
-        return this.tryDo(() => {
+        return this.tryDo(async () => {
+            // const {
+            //     AuthenticationResult,
+            //     ChallengeName,
+            //     ChallengeParameters,
+            //     Session,
+            // } = await this.cognitoIdentityProvider.initiateAuth({
+            //     AuthFlow: AuthFlowType.CUSTOM_AUTH,
+            //     ClientId: this.clientId,
+            //     AuthParameters: {
+            //         USERNAME: username,
+            //         DEVICE_KEY: 'test',
+            //     },
+            // })
             const user = RichCognitoUser.createUser(this.userPool, username)
             return user.initCustomAuthChallenge(username)
         })
@@ -66,12 +86,18 @@ export class CognitoAuthService
         token: UserToken,
     ): Promise<void> {
         return this.tryDo(async () => {
-            const user = RichCognitoUser.createUser(this.userPool)
-            user.setSignInUserSessionByToken(token)
-            await user.changePasswordPromise(
-                updateInfo.oldPassword,
-                updateInfo.newPassword,
-            )
+            const { newPassword, oldPassword } = updateInfo
+            await this.cognitoIdentityProvider.changePassword({
+                AccessToken: token.accessToken,
+                PreviousPassword: oldPassword,
+                ProposedPassword: newPassword,
+            })
+            // const user = RichCognitoUser.createUser(this.userPool)
+            // user.setSignInUserSessionByToken(token)
+            // await user.changePasswordPromise(
+            //     updateInfo.oldPassword,
+            //     updateInfo.newPassword,
+            // )
         })
     }
 
@@ -80,6 +106,18 @@ export class CognitoAuthService
         additionalData?: LoginAdditionalData,
     ): Promise<UserToken> {
         return this.tryDo(async () => {
+            // const { password, username } = userData
+            // const { AuthenticationResult } =
+            //     await this.cognitoIdentityProvider.initiateAuth({
+            //         AuthFlow: AuthFlowType.USER_PASSWORD_AUTH,
+            //         AuthParameters: {
+            //             USERNAME: username,
+            //             PASSWORD: password,
+            //             DEVICE_KEY: 'test',
+            //         },
+            //         ClientId: this.clientId,
+            //     })
+            // return this.getTokenFromAuthResult(AuthenticationResult)
             const user = RichCognitoUser.createUser(
                 this.userPool,
                 userData.username,
@@ -94,16 +132,29 @@ export class CognitoAuthService
 
     public async refresh(token: RefreshAuthToken): Promise<UserToken> {
         return this.tryDo(async () => {
-            const user = RichCognitoUser.createUser(this.userPool)
-            return user.refreshToken(token)
+            const { AuthenticationResult } =
+                await this.cognitoIdentityProvider.initiateAuth({
+                    AuthFlow: AuthFlowType.REFRESH_TOKEN_AUTH,
+                    ClientId: this.clientId,
+                    AuthParameters: {
+                        REFRESH_TOKEN: token.refreshToken,
+                        DEVICE_KEY: 'test',
+                    },
+                })
+            return this.getTokenFromAuthResult(AuthenticationResult)
+            // const user = RichCognitoUser.createUser(this.userPool)
+            // return user.refreshToken(token)
         })
     }
 
     public async logout(token: UserToken): Promise<void> {
         return this.tryDo(async () => {
-            const user = RichCognitoUser.createUser(this.userPool)
-            user.setSignInUserSessionByToken(token)
-            await user.globalSignOutPromise()
+            await this.cognitoIdentityProvider.globalSignOut({
+                AccessToken: token.accessToken,
+            })
+            // const user = RichCognitoUser.createUser(this.userPool)
+            // user.setSignInUserSessionByToken(token)
+            // await user.globalSignOutPromise()
         })
     }
 
@@ -136,5 +187,21 @@ export class CognitoAuthService
                 ConfirmationCode: data.confirmationCode,
             })
         })
+    }
+
+    private getTokenFromAuthResult(
+        authResult?: AuthenticationResultType,
+    ): UserToken {
+        if (authResult) {
+            const { AccessToken, RefreshToken, IdToken } = authResult
+            if (AccessToken && RefreshToken && IdToken) {
+                return {
+                    accessToken: AccessToken,
+                    idToken: IdToken,
+                    refreshToken: RefreshToken,
+                }
+            }
+        }
+        throw new UnauthorizedError()
     }
 }
