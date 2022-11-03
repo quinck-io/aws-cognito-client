@@ -11,9 +11,14 @@ import {
     AdminUserService,
     SearchUsersParameters,
 } from '../models/components/admin-user-service'
+import { UpdateCredentialsInfo } from '../models/components/auth-service'
 import { CompleteUserInfo, UserStatus } from '../models/utils/user'
 import { BasicCognitoService } from './basic-cognito-service'
-import { UserNotFoundError, UserNotRetrievedError } from './errors'
+import {
+    UnknownInternalError,
+    UserNotFoundError,
+    UserNotRetrievedError,
+} from './errors'
 import { VerifiableAttribute } from './models/attributes'
 import { FilledUserType } from './models/users'
 
@@ -27,6 +32,21 @@ export class CognitoAdminService<
     extends BasicCognitoService<SignUpInfo, UserUpdateInfo, UserInfoAttributes>
     implements AdminUserService<SignUpInfo, UserUpdateInfo, UserInfoAttributes>
 {
+    public async setUserPassword(
+        username: string,
+        updatePassword: UpdateCredentialsInfo,
+    ): Promise<void> {
+        const { newPassword } = updatePassword
+        await this.tryDo(async () => {
+            await this.cognitoIdentityProvider.adminSetUserPassword({
+                UserPoolId: this.userPoolId,
+                Username: username,
+                Password: newPassword,
+                Permanent: true,
+            })
+        })
+    }
+
     public async forceEmailVerification(username: string): Promise<void> {
         await this.forceAttributeVerification(username, 'email_verified')
     }
@@ -39,22 +59,28 @@ export class CognitoAdminService<
         { username, password }: AdminCreateUserCredentials,
         user: SignUpInfo,
         groups: string[] = [],
-    ): Promise<void> {
+    ): Promise<CompleteUserInfo<UserInfoAttributes>> {
         return this.tryDo(async () => {
             const attributes = this.createAttributesFromObject(
                 this.fitSignUpInfo(user),
                 false,
             )
-            await this.cognitoIdentityProvider.adminCreateUser({
-                UserPoolId: this.userPoolId,
-                Username: username,
-                TemporaryPassword: password,
-                UserAttributes: attributes,
-                DesiredDeliveryMediums: ['EMAIL'],
-            })
+            const { User } = await this.cognitoIdentityProvider.adminCreateUser(
+                {
+                    UserPoolId: this.userPoolId,
+                    Username: username,
+                    TemporaryPassword: password,
+                    UserAttributes: attributes,
+                    DesiredDeliveryMediums: ['EMAIL'],
+                },
+            )
             for (const group of groups) {
                 await this._addUserToGroup(username, group)
             }
+            if (User && User.Attributes && User.Username) {
+                return this.parseUser(User as FilledUserType)
+            }
+            throw new UnknownInternalError()
         })
     }
 
