@@ -10,7 +10,7 @@ export interface AdminUserService<
         credentials: AdminCreateUserCredentials,
         user: SignUpInfo,
         groups?: string[],
-    ): Promise<void>
+    ): Promise<CompleteUserInfo<UserInfoAttributes>>
     setUserPassword(
         username: string,
         updatePassword: UpdateCredentialsInfo,
