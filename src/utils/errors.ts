@@ -21,3 +21,35 @@ export class BasicError extends Error {
         }
     }
 }
+
+export class ForceChangePasswordError extends BasicError {
+    public readonly name = ForceChangePasswordError.name
+}
+
+export class UserNotRetrievedError extends BasicError {
+    public readonly name = UserNotRetrievedError.name
+}
+
+export class WrongUsernameOrPasswordError extends BasicError {
+    public readonly name = WrongUsernameOrPasswordError.name
+}
+
+export class UnauthorizedError extends BasicError {
+    public readonly name = UnauthorizedError.name
+}
+
+export class UserAlreadyExistsError extends BasicError {
+    public readonly name = UserAlreadyExistsError.name
+}
+
+export class UserNotFoundError extends BasicError {
+    public readonly name = UserNotFoundError.name
+}
+
+export class InvalidPasswordError extends BasicError {
+    public readonly name = InvalidPasswordError.name
+}
+
+export class UnknownInternalError extends BasicError {
+    public readonly name = UnknownInternalError.name
+}
