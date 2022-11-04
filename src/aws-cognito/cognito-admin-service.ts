@@ -13,12 +13,12 @@ import {
 } from '../models/components/admin-user-service'
 import { UpdateCredentialsInfo } from '../models/components/auth-service'
 import { CompleteUserInfo, UserStatus } from '../models/utils/user'
-import { BasicCognitoService } from './basic-cognito-service'
 import {
     UnknownInternalError,
     UserNotFoundError,
     UserNotRetrievedError,
-} from './errors'
+} from '../utils/errors'
+import { BasicCognitoService } from './basic-cognito-service'
 import { VerifiableAttribute } from './models/attributes'
 import { FilledUserType } from './models/users'
 
