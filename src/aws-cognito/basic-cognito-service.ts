@@ -10,9 +10,9 @@ import {
 import '@quinck/collections'
 import { CognitoUserAttribute } from 'amazon-cognito-identity-js'
 import { BasicUserInfo, UserInfo } from '../models/utils/user'
-import { BasicError } from '../utils/errors'
 import {
-    ForceChangePasswordException,
+    BasicError,
+    ForceChangePasswordError,
     InvalidPasswordError,
     UnauthorizedError,
     UnknownInternalError,
@@ -20,7 +20,7 @@ import {
     UserNotFoundError,
     UserNotRetrievedError,
     WrongUsernameOrPasswordError,
-} from './errors'
+} from '../utils/errors'
 import { UserAttributesEntries, UserStructure } from './models/users'
 
 export type CognitoServiceConfig<
@@ -150,26 +150,26 @@ export class BasicCognitoService<
     }
 
     protected createError(error: unknown): Error {
-        if (!(error instanceof Error)) return new UnknownInternalError()
+        if (!(error instanceof Error)) return new UnknownInternalError(error)
         if (error instanceof BasicError) return error
         switch (error.name) {
             case UserNotFoundException.name:
             case UserNotFoundError.name:
-                return new UserNotFoundError()
+                return new UserNotFoundError(error)
             case NotAuthorizedException.name:
-                return new WrongUsernameOrPasswordError(error.message)
+                return new WrongUsernameOrPasswordError(error)
             case UsernameExistsException.name:
-                return new UserAlreadyExistsError()
+                return new UserAlreadyExistsError(error)
             case UnauthorizedException.name:
-                return new UnauthorizedError()
-            case ForceChangePasswordException.name:
-                return new ForceChangePasswordException()
+                return new UnauthorizedError(error)
+            case ForceChangePasswordError.name:
+                return new ForceChangePasswordError(error)
             case UserNotRetrievedError.name:
-                return new UserNotRetrievedError()
+                return new UserNotRetrievedError(error)
             case InvalidPasswordException.name:
-                return new InvalidPasswordError(error.message)
+                return new InvalidPasswordError(error)
             default:
-                return new UnknownInternalError()
+                return new UnknownInternalError(error)
         }
     }
 }

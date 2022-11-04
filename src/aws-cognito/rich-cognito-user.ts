@@ -10,14 +10,14 @@ import {
     ICognitoUserData,
 } from 'amazon-cognito-identity-js'
 import {
+    CompletedCustomAuthChallengeResponse,
+    CustomAuthChallengeParameters,
     CustomAuthChallengeResponse,
     CustomAuthChallengeResponseStatus,
-    CustomAuthChallengeParameters,
-    CompletedCustomAuthChallengeResponse,
 } from '../models/components/auth-service'
 import { RefreshAuthToken, UserToken } from '../models/utils/auth'
 import { Credentials, LoginAdditionalData } from '../models/utils/user'
-import { ForceChangePasswordException } from './errors'
+import { ForceChangePasswordError } from './errors'
 
 type CognitoUserWithSession = CognitoUser & { Session: string }
 
@@ -123,7 +123,7 @@ export class RichCognitoUser extends CognitoUser {
                                 onFailure: err => reject(err),
                             },
                         )
-                    else reject(new ForceChangePasswordException())
+                    else reject(new ForceChangePasswordError())
                 },
             })
         })
