@@ -1,5 +1,6 @@
 import {
     CognitoIdentityProvider,
+    ExpiredCodeException,
     InvalidPasswordException,
     NotAuthorizedException,
     UnauthorizedException,
@@ -11,6 +12,7 @@ import { CognitoUserAttribute } from 'amazon-cognito-identity-js'
 import { BasicUserInfo, UserInfo } from '../models/utils/user'
 import {
     ForceChangePasswordError,
+    InvalidOrExpiredCodeError,
     InvalidPasswordError,
     UnauthorizedError,
     UnknownInternalError,
@@ -152,6 +154,8 @@ export class BasicCognitoService<
                 return new UserNotRetrievedError(error)
             case InvalidPasswordException.name:
                 return new InvalidPasswordError(error)
+            case ExpiredCodeException.name:
+                return new InvalidOrExpiredCodeError(error)
             default:
                 return new UnknownInternalError(error)
         }
