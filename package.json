@@ -30,10 +30,9 @@
   "license": "ISC",
   "homepage": "https://bitbucket.org/Quinck/aws-cognito-client#readme",
   "devDependencies": {
-    "@tsconfig/node14": "^1.0.1",
     "@types/chai": "^4.3.3",
     "@types/mocha": "^10.0.0",
-    "@types/node": "^18.11.9",
+    "@types/node": "^16.18.11",
     "@typescript-eslint/eslint-plugin": "^5.42.0",
     "@typescript-eslint/parser": "^5.42.0",
     "chai": "^4.3.6",
@@ -51,6 +50,7 @@
   ],
   "dependencies": {
     "@aws-sdk/client-cognito-identity-provider": "^3.200.0",
-    "@quinck/collections": "^0.1.1"
+    "@quinck/collections": "^0.1.1",
+    "@tsconfig/node16": "^1.0.3"
   }
 }
