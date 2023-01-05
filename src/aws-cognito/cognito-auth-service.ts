@@ -1,23 +1,30 @@
 import {
-    AuthenticationResultType,
+    AdminInitiateAuthCommandInput,
+    AdminInitiateAuthCommandOutput,
+    AdminRespondToAuthChallengeCommandOutput,
     AuthFlowType,
+    AuthenticationResultType,
+    ChallengeNameType,
+    CognitoIdentityProvider,
 } from '@aws-sdk/client-cognito-identity-provider'
-import { CognitoUserPool } from 'amazon-cognito-identity-js'
 import {
+    AuthChallengeName,
+    AuthChallengeOptions,
+    AuthChallengeResult,
     AuthService,
-    CompletedCustomAuthChallengeResponse,
-    CustomAuthChallengeResponse,
+    GenericAuthChallengeCompletion,
+    LoginResult,
     ResetPasswordData,
     UpdateCredentialsInfo,
 } from '../models/components/auth-service'
 import { RefreshAuthToken, UserToken } from '../models/utils/auth'
-import { Credentials, LoginAdditionalData } from '../models/utils/user'
+import { Credentials } from '../models/utils/user'
+import { isUserToken } from '../utils/auth'
+import { UnauthorizedError } from '../utils/errors'
 import {
     BasicCognitoService,
     CognitoServiceConfig,
 } from './basic-cognito-service'
-import { UnauthorizedError } from './errors'
-import { RichCognitoUser } from './rich-cognito-user'
 
 type GenericUserAttributes = Record<string, unknown>
 
@@ -37,47 +44,29 @@ export class CognitoAuthService
     >
     implements AuthService
 {
-    protected readonly userPool: CognitoUserPool
     private readonly clientId: string
+    private readonly authManager: AuthenticationManager
 
     constructor(config: CognitoAuthServiceConfig) {
         super(config)
-        this.userPool = new CognitoUserPool({
-            UserPoolId: config.userPoolId,
-            ClientId: config.clientId,
-        })
-        this.clientId = config.clientId
-    }
-    public async verifyCustomAuthChallenge(
-        username: string,
-        challengeResponse: string,
-        session: string,
-    ): Promise<CompletedCustomAuthChallengeResponse> {
-        return this.tryDo(() => {
-            const user = RichCognitoUser.createUser(this.userPool, username)
-            return user.verifyCustomAuthChallenge(challengeResponse, session)
-        })
+        const { clientId, userPoolId } = config
+        this.clientId = clientId
+        this.authManager = new AuthenticationManager(
+            this.cognitoIdentityProvider,
+            userPoolId,
+            clientId,
+        )
     }
 
-    public async initCustomAuthChallenge(
-        username: string,
-    ): Promise<CustomAuthChallengeResponse> {
+    public completeAuthChallenge(
+        completion: GenericAuthChallengeCompletion,
+        options: AuthChallengeOptions,
+    ): Promise<LoginResult> {
         return this.tryDo(async () => {
-            // const {
-            //     AuthenticationResult,
-            //     ChallengeName,
-            //     ChallengeParameters,
-            //     Session,
-            // } = await this.cognitoIdentityProvider.initiateAuth({
-            //     AuthFlow: AuthFlowType.CUSTOM_AUTH,
-            //     ClientId: this.clientId,
-            //     AuthParameters: {
-            //         USERNAME: username,
-            //         DEVICE_KEY: 'test',
-            //     },
-            // })
-            const user = RichCognitoUser.createUser(this.userPool, username)
-            return user.initCustomAuthChallenge(username)
+            return await this.authManager.completeAuthChallenge(
+                completion,
+                options,
+            )
         })
     }
 
@@ -92,58 +81,37 @@ export class CognitoAuthService
                 PreviousPassword: oldPassword,
                 ProposedPassword: newPassword,
             })
-            // const user = RichCognitoUser.createUser(this.userPool)
-            // user.setSignInUserSessionByToken(token)
-            // await user.changePasswordPromise(
-            //     updateInfo.oldPassword,
-            //     updateInfo.newPassword,
-            // )
         })
     }
 
-    public async login(
-        userData: Credentials,
-        additionalData?: LoginAdditionalData,
-    ): Promise<UserToken> {
+    public async login(userData: Credentials): Promise<LoginResult> {
         return this.tryDo(async () => {
-            // const { password, username } = userData
-            // const { AuthenticationResult } =
-            //     await this.cognitoIdentityProvider.initiateAuth({
-            //         AuthFlow: AuthFlowType.USER_PASSWORD_AUTH,
-            //         AuthParameters: {
-            //             USERNAME: username,
-            //             PASSWORD: password,
-            //             DEVICE_KEY: 'test',
-            //         },
-            //         ClientId: this.clientId,
-            //     })
-            // return this.getTokenFromAuthResult(AuthenticationResult)
-            const user = RichCognitoUser.createUser(
-                this.userPool,
-                userData.username,
-            )
-            const userToken = await user.authenticateUserPromise(
-                userData,
-                additionalData,
-            )
-            return userToken
+            const { password, username } = userData
+            const result = await this.authManager.adminInitiateAuth({
+                AuthFlow: AuthFlowType.ADMIN_USER_PASSWORD_AUTH,
+                AuthParameters: {
+                    USERNAME: username,
+                    PASSWORD: password,
+                },
+                ClientId: this.clientId,
+                UserPoolId: this.userPoolId,
+            })
+            return result
         })
     }
 
     public async refresh(token: RefreshAuthToken): Promise<UserToken> {
         return this.tryDo(async () => {
-            const { AuthenticationResult } =
-                await this.cognitoIdentityProvider.initiateAuth({
-                    AuthFlow: AuthFlowType.REFRESH_TOKEN_AUTH,
-                    ClientId: this.clientId,
-                    AuthParameters: {
-                        REFRESH_TOKEN: token.refreshToken,
-                        DEVICE_KEY: 'test',
-                    },
-                })
-            return this.getTokenFromAuthResult(AuthenticationResult)
-            // const user = RichCognitoUser.createUser(this.userPool)
-            // return user.refreshToken(token)
+            const loginResult = await this.authManager.adminInitiateAuth({
+                AuthFlow: AuthFlowType.REFRESH_TOKEN_AUTH,
+                ClientId: this.clientId,
+                UserPoolId: this.userPoolId,
+                AuthParameters: {
+                    REFRESH_TOKEN: token.refreshToken,
+                },
+            })
+            if (isUserToken(loginResult)) return loginResult
+            throw new UnauthorizedError()
         })
     }
 
@@ -152,9 +120,6 @@ export class CognitoAuthService
             await this.cognitoIdentityProvider.globalSignOut({
                 AccessToken: token.accessToken,
             })
-            // const user = RichCognitoUser.createUser(this.userPool)
-            // user.setSignInUserSessionByToken(token)
-            // await user.globalSignOutPromise()
         })
     }
 
@@ -163,7 +128,7 @@ export class CognitoAuthService
     ): Promise<void> {
         return this.tryDo(async () => {
             await this.cognitoIdentityProvider.resendConfirmationCode({
-                ClientId: this.userPool.getClientId(),
+                ClientId: this.clientId,
                 Username: username,
             })
         })
@@ -172,7 +137,7 @@ export class CognitoAuthService
     public async forgotPassword(username: string): Promise<void> {
         return this.tryDo(async () => {
             await this.cognitoIdentityProvider.forgotPassword({
-                ClientId: this.userPool.getClientId(),
+                ClientId: this.clientId,
                 Username: username,
             })
         })
@@ -181,17 +146,137 @@ export class CognitoAuthService
     public async resetPassword(data: ResetPasswordData): Promise<void> {
         return this.tryDo(async () => {
             await this.cognitoIdentityProvider.confirmForgotPassword({
-                ClientId: this.userPool.getClientId(),
+                ClientId: this.clientId,
                 Username: data.username,
                 Password: data.newPassword,
                 ConfirmationCode: data.confirmationCode,
             })
         })
     }
+}
 
-    private getTokenFromAuthResult(
-        authResult?: AuthenticationResultType,
-    ): UserToken {
+class AuthenticationManager {
+    constructor(
+        private readonly cognitoIdentityProvider: CognitoIdentityProvider,
+        private readonly userPoolId: string,
+        private readonly clientId: string,
+    ) {}
+
+    public async adminInitiateAuth(
+        input: AdminInitiateAuthCommandInput,
+    ): Promise<LoginResult> {
+        const output = await this.cognitoIdentityProvider.adminInitiateAuth(
+            input,
+        )
+
+        return this.handleAdminAuthOutput(output)
+    }
+
+    public handleAdminAuthOutput(
+        output:
+            | AdminInitiateAuthCommandOutput
+            | AdminRespondToAuthChallengeCommandOutput,
+    ): LoginResult {
+        const { AuthenticationResult } = output
+
+        if (AuthenticationResult)
+            return this.parseUserToken(AuthenticationResult)
+
+        return this.handleRequiredAuthChallenge(output)
+    }
+
+    private handleRequiredAuthChallenge(
+        output: AdminInitiateAuthCommandOutput,
+    ): AuthChallengeResult {
+        const { ChallengeName, ChallengeParameters, Session } = output
+        const parameters: CognitoAuthChallengeParameters = {
+            ChallengeParameters,
+            Session,
+        }
+        const options = { parameters }
+        const name = this.cognitoChallengeNameToChallengeName(ChallengeName)
+        return {
+            authChallenge: { name, options },
+        }
+    }
+
+    public completeAuthChallenge(
+        completion: GenericAuthChallengeCompletion,
+        options: AuthChallengeOptions,
+    ): Promise<LoginResult> {
+        switch (completion.name) {
+            case AuthChallengeName.CUSTOM_CHALLENGE:
+                return this._completeAuthChallenge(completion, options)
+            case AuthChallengeName.NEW_PASSWORD_REQUIRED:
+                return this._completeAuthChallenge(completion, options, {
+                    NEW_PASSWORD: completion.newPassword,
+                })
+            default:
+                throw new UnauthorizedError()
+        }
+    }
+
+    private async _completeAuthChallenge(
+        completion: GenericAuthChallengeCompletion,
+        options: AuthChallengeOptions,
+        additionalChallengeResponses?: Record<string, string>,
+    ): Promise<LoginResult> {
+        const { name } = completion
+        const ChallengeName = this.challengeNameToCognitoChallengeName(name)
+        const { ChallengeParameters, Session } = this.parseParameters(
+            options.parameters,
+        )
+
+        const ChallengeResponses = {
+            ...ChallengeParameters,
+            ...(additionalChallengeResponses ?? {}),
+        }
+
+        const result =
+            await this.cognitoIdentityProvider.adminRespondToAuthChallenge({
+                ChallengeName,
+                UserPoolId: this.userPoolId,
+                ClientId: this.clientId,
+                Session,
+                ChallengeResponses,
+            })
+
+        return this.handleAdminAuthOutput(result)
+    }
+
+    private challengeNameToCognitoChallengeName(
+        name: AuthChallengeName,
+    ): ChallengeNameType {
+        switch (name) {
+            case AuthChallengeName.CUSTOM_CHALLENGE:
+                return ChallengeNameType.CUSTOM_CHALLENGE
+            case AuthChallengeName.NEW_PASSWORD_REQUIRED:
+                return ChallengeNameType.NEW_PASSWORD_REQUIRED
+            default:
+                throw new UnauthorizedError()
+        }
+    }
+
+    private cognitoChallengeNameToChallengeName(
+        name?: string,
+    ): AuthChallengeName {
+        switch (name) {
+            case ChallengeNameType.CUSTOM_CHALLENGE:
+                return AuthChallengeName.CUSTOM_CHALLENGE
+            case ChallengeNameType.NEW_PASSWORD_REQUIRED:
+                return AuthChallengeName.NEW_PASSWORD_REQUIRED
+            default:
+                throw new UnauthorizedError()
+        }
+    }
+
+    private parseParameters(
+        parameters: unknown,
+    ): CognitoAuthChallengeParameters {
+        return parameters as CognitoAuthChallengeParameters // TODO implement real check
+    }
+
+    public parseUserToken(authResult?: AuthenticationResultType): UserToken {
         if (authResult) {
             const { AccessToken, RefreshToken, IdToken } = authResult
             if (AccessToken && RefreshToken && IdToken) {
@@ -205,3 +290,8 @@ export class CognitoAuthService
         throw new UnauthorizedError()
     }
 }
+
+type CognitoAuthChallengeParameters = Pick<
+    AdminInitiateAuthCommandOutput,
+    'ChallengeParameters' | 'Session'
+>

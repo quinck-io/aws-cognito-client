@@ -1,11 +1,23 @@
-import jwt_decode from 'jwt-decode'
-import { BasicAuthToken } from '../models/utils/auth'
+import {
+    AuthChallengeResult,
+    LoginResult,
+} from '../models/components/auth-service'
+import { UserToken } from '../models/utils/auth'
 
-type IdTokenStructure = {
-    'cognito:username': string
+export function isUserToken(
+    loginResult: LoginResult,
+): loginResult is UserToken {
+    const requiredKeys: (keyof UserToken)[] = [
+        'idToken',
+        'accessToken',
+        'refreshToken',
+    ]
+    return requiredKeys.every(key => key in loginResult)
 }
 
-export function usernameFromUserToken({ idToken }: BasicAuthToken): string {
-    const decodedToken = jwt_decode<IdTokenStructure>(idToken)
-    return decodedToken['cognito:username']
+export function isAuthChallengeResult(
+    loginResult: LoginResult,
+): loginResult is AuthChallengeResult {
+    const requiredKeys: (keyof AuthChallengeResult)[] = ['authChallenge']
+    return requiredKeys.every(key => key in loginResult)
 }

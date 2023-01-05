@@ -1,11 +1,10 @@
+import { createAuthService } from '../../factories/auth-service'
+import { isAuthChallengeResult, isUserToken } from '../../utils/auth'
 import { RefreshAuthToken, UserToken } from '../utils/auth'
-import { Credentials, LoginAdditionalData } from '../utils/user'
+import { Credentials } from '../utils/user'
 
 export interface AuthService {
-    login(
-        userData: Credentials,
-        additionalData?: LoginAdditionalData,
-    ): Promise<UserToken>
+    login(userData: Credentials): Promise<LoginResult>
     refresh(token: RefreshAuthToken): Promise<UserToken>
     logout(token: UserToken): Promise<void>
     updateCredentials(
@@ -15,14 +14,10 @@ export interface AuthService {
     resendConfirmationLinkByEmail(username: string): Promise<void>
     forgotPassword(username: string): Promise<void>
     resetPassword(data: ResetPasswordData): Promise<void>
-    initCustomAuthChallenge(
-        username: string,
-    ): Promise<CustomAuthChallengeResponse>
-    verifyCustomAuthChallenge(
-        username: string,
-        challengeResponse: string,
-        session: string,
-    ): Promise<CompletedCustomAuthChallengeResponse>
+    completeAuthChallenge(
+        completion: GenericAuthChallengeCompletion,
+        options: AuthChallengeOptions,
+    ): Promise<LoginResult>
 }
 
 export type ResetPasswordData = {
@@ -36,24 +31,65 @@ export type UpdateCredentialsInfo = {
     readonly newPassword: string
 }
 
-export type CustomAuthChallengeResponse =
-    | CompletedCustomAuthChallengeResponse
-    | VerificationRequiredCustomAuthChallengeResponse
+// ---------------------------------- //
 
-export type CompletedCustomAuthChallengeResponse = {
-    status: CustomAuthChallengeResponseStatus.COMPLETED
-    userToken: UserToken
+export type LoginResult = UserToken | AuthChallengeResult
+
+export type AuthChallengeOptions = {
+    parameters?: unknown
 }
 
-export type VerificationRequiredCustomAuthChallengeResponse = {
-    status: CustomAuthChallengeResponseStatus.VERIFICATION_REQUIRED
-    parameters: CustomAuthChallengeParameters
-    session: string
+export type AuthChallengeResult = { authChallenge: AuthChallenge }
+
+export type AuthChallenge = {
+    name: AuthChallengeName
+    options: Pick<AuthChallengeOptions, 'parameters'>
 }
 
-export enum CustomAuthChallengeResponseStatus {
-    COMPLETED = 'COMPLETED',
-    VERIFICATION_REQUIRED = 'VERIFICATION_REQUIRED',
+export type GenericAuthChallengeCompletion =
+    | NewPasswordRequiredChallengeCompletion
+    | CustomChallengeCompletion
+
+export type AuthChallengeCompletion<Name extends AuthChallengeName> = {
+    name: Name
 }
 
-export type CustomAuthChallengeParameters = { message: string }
+export type NewPasswordRequiredChallengeCompletion =
+    AuthChallengeCompletion<AuthChallengeName.NEW_PASSWORD_REQUIRED> & {
+        newPassword: string
+    }
+
+export type CustomChallengeCompletion =
+    AuthChallengeCompletion<AuthChallengeName.CUSTOM_CHALLENGE> & {
+        response: unknown
+    }
+
+export enum AuthChallengeName {
+    CUSTOM_CHALLENGE = 'CUSTOM_CHALLENGE',
+    NEW_PASSWORD_REQUIRED = 'NEW_PASSWORD_REQUIRED',
+}
+
+const mm = createAuthService({
+    type: 'cognito',
+    clientId: '',
+    userPoolId: '',
+    userStructure: {},
+})
+
+mm.login({ username: '', password: '' }).then(result => {
+    if (isUserToken(result)) console.log('evvai')
+    else if (isAuthChallengeResult(result)) {
+        const { name, options } = result.authChallenge
+        if (name === AuthChallengeName.NEW_PASSWORD_REQUIRED) {
+            mm.completeAuthChallenge(
+                {
+                    name: AuthChallengeName.NEW_PASSWORD_REQUIRED,
+                    newPassword: '',
+                },
+                {
+                    parameters: options.parameters,
+                },
+            )
+        }
+    }
+})
