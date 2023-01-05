@@ -53,3 +53,7 @@ export class InvalidPasswordError extends BasicError {
 export class UnknownInternalError extends BasicError {
     public readonly name = UnknownInternalError.name
 }
+
+export class InvalidOrExpiredCodeError extends BasicError {
+    public readonly name = InvalidOrExpiredCodeError.name
+}
