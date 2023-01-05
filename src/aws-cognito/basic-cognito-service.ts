@@ -5,11 +5,10 @@ import {
     InvalidPasswordException,
     NotAuthorizedException,
     UnauthorizedException,
-    UsernameExistsException,
     UserNotFoundException,
+    UsernameExistsException,
 } from '@aws-sdk/client-cognito-identity-provider'
 import '@quinck/collections'
-import { CognitoUserAttribute } from 'amazon-cognito-identity-js'
 import { BasicUserInfo, UserInfo } from '../models/utils/user'
 import {
     BasicError,
@@ -23,6 +22,7 @@ import {
     UserNotRetrievedError,
     WrongUsernameOrPasswordError,
 } from '../utils/errors'
+import { CognitoUserAttribute } from './models/attributes'
 import { UserAttributesEntries, UserStructure } from './models/users'
 
 export type CognitoServiceConfig<
@@ -87,20 +87,18 @@ export class BasicCognitoService<
         const attributes = this.userAttributes.collect([
             [
                 ([key]) => user[key] != undefined,
-                ([key, { cognitoName, stringify }]) =>
-                    new CognitoUserAttribute({
-                        Name: cognitoName,
-                        Value: stringify(user[key]),
-                    }),
+                ([key, { cognitoName, stringify }]) => ({
+                    Name: cognitoName,
+                    Value: stringify(user[key]),
+                }),
             ],
             [
                 ([, { defaultValue }]) =>
                     defaultIfUndefined && defaultValue != undefined,
-                ([, { cognitoName, stringify, defaultValue }]) =>
-                    new CognitoUserAttribute({
-                        Name: cognitoName,
-                        Value: stringify(defaultValue),
-                    }),
+                ([, { cognitoName, stringify, defaultValue }]) => ({
+                    Name: cognitoName,
+                    Value: stringify(defaultValue),
+                }),
             ],
         ])
 
@@ -143,11 +141,10 @@ export class BasicCognitoService<
     ): CognitoUserAttribute[] {
         return attributes.singleCollect(
             attr => attr.Name && attr.Value,
-            ({ Name, Value }) =>
-                new CognitoUserAttribute({
-                    Name: Name as string,
-                    Value: Value || '',
-                }),
+            ({ Name, Value }) => ({
+                Name: Name as string,
+                Value: Value || '',
+            }),
         )
     }
 

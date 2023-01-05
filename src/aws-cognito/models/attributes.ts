@@ -1,3 +1,5 @@
+import { AttributeType } from '@aws-sdk/client-cognito-identity-provider'
+
 export type CognitoAttributeName =
     | 'address'
     | 'birthdate'
@@ -21,3 +23,5 @@ export type CognitoAttributeName =
     | `custom:${string}`
 
 export type VerifiableAttribute = 'email_verified' | 'phone_number_verified'
+
+export type CognitoUserAttribute = Required<AttributeType>
