@@ -40,13 +40,12 @@ export class CognitoUserService<
                 false,
             )
             const { password, username } = credentials
-            const { UserSub } = await this.cognitoIdentityProvider.signUp({
+            await this.cognitoIdentityProvider.signUp({
                 Username: username,
                 Password: password,
                 UserAttributes: attributes,
                 ClientId: this.clientId,
             })
-            console.log('SUB: ', UserSub)
         })
     }
 

@@ -1,5 +1,3 @@
-import { createAuthService } from '../../factories/auth-service'
-import { isAuthChallengeResult, isUserToken } from '../../utils/auth'
 import { RefreshAuthToken, UserToken } from '../utils/auth'
 import { Credentials } from '../utils/user'
 
@@ -68,28 +66,3 @@ export enum AuthChallengeName {
     CUSTOM_CHALLENGE = 'CUSTOM_CHALLENGE',
     NEW_PASSWORD_REQUIRED = 'NEW_PASSWORD_REQUIRED',
 }
-
-const mm = createAuthService({
-    type: 'cognito',
-    clientId: '',
-    userPoolId: '',
-    userStructure: {},
-})
-
-mm.login({ username: '', password: '' }).then(result => {
-    if (isUserToken(result)) console.log('evvai')
-    else if (isAuthChallengeResult(result)) {
-        const { name, options } = result.authChallenge
-        if (name === AuthChallengeName.NEW_PASSWORD_REQUIRED) {
-            mm.completeAuthChallenge(
-                {
-                    name: AuthChallengeName.NEW_PASSWORD_REQUIRED,
-                    newPassword: '',
-                },
-                {
-                    parameters: options.parameters,
-                },
-            )
-        }
-    }
-})
