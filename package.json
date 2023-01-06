@@ -31,6 +31,7 @@
   "license": "ISC",
   "homepage": "https://bitbucket.org/Quinck/aws-cognito-client#readme",
   "devDependencies": {
+    "@tsconfig/node16": "^1.0.3",
     "@types/chai": "4.3.4",
     "@types/mocha": "10.0.1",
     "@types/node": "16.18.11",
@@ -51,7 +52,6 @@
   ],
   "dependencies": {
     "@aws-sdk/client-cognito-identity-provider": "3.245.0",
-    "@quinck/collections": "0.2.0",
-    "@tsconfig/node16": "1.0.3"
+    "@quinck/collections": "0.2.0"
   }
 }
