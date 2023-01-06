@@ -127,7 +127,7 @@ export class CognitoAdminService<
     }
 
     public async searchUsers(
-        params: SearchUsersParameters,
+        params: SearchUsersParameters<UserInfoAttributes>,
     ): Promise<CompleteUserInfo<UserInfoAttributes>[]> {
         return this.tryDo(async () => {
             const users = await this.getAllUsersAllPages()
@@ -137,13 +137,15 @@ export class CognitoAdminService<
 
     public searchUsersInGroup(
         group: string,
-        params: SearchUsersParameters,
+        params: SearchUsersParameters<UserInfoAttributes>,
     ): Promise<CompleteUserInfo<UserInfoAttributes>[]> {
         return this.tryDo(async () => {
             const users = await this.getAllUsersByGroupAllPages(group)
             return this.parseUsersSearchResult(users)
         })
     }
+
+    private getCognitoFIlters() {}
 
     public async getAllUsers(/* comment essential for eslint and prettier rules
      */): Promise<CompleteUserInfo<UserInfoAttributes>[]> {

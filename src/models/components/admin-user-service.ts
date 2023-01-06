@@ -25,11 +25,11 @@ export interface AdminUserService<
     enableUser(username: string): Promise<void>
     getAllUsers(): Promise<CompleteUserInfo<UserInfoAttributes>[]>
     searchUsers(
-        params: SearchUsersParameters,
+        params: SearchUsersParameters<UserInfoAttributes>,
     ): Promise<CompleteUserInfo<UserInfoAttributes>[]>
     searchUsersInGroup(
         group: string,
-        params: SearchUsersParameters,
+        params: SearchUsersParameters<UserInfoAttributes>,
     ): Promise<CompleteUserInfo<UserInfoAttributes>[]>
     getUserByEmail(email: string): Promise<CompleteUserInfo<UserInfoAttributes>>
     forceEmailVerification(username: string): Promise<void>
@@ -42,6 +42,21 @@ export type AdminCreateUserCredentials = {
     password?: string
 }
 
-export type SearchUsersParameters = {
-    // TODO
+export type SearchUsersParameters<
+    UserInfoAttributes extends Record<string, unknown>,
+> = {
+    filters?: SearchUserFilter<UserInfoAttributes>[]
+}
+
+export type SearchUserFilter<
+    UserInfoAttributes extends Record<string, unknown>,
+> = Record<
+    keyof UserInfoAttributes,
+    [SearchUserFilterComparator, SearchUserFilterValue]
+>
+
+export type SearchUserFilterValue = unknown | undefined
+
+export enum SearchUserFilterComparator {
+    EQUALS = 'EQUALS',
 }

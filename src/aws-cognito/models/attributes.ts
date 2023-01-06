@@ -1,4 +1,8 @@
-import { AttributeType } from '@aws-sdk/client-cognito-identity-provider'
+import {
+    AttributeType,
+    CognitoIdentityProvider,
+} from '@aws-sdk/client-cognito-identity-provider'
+import { SearchUserFilter } from '../../models/components/admin-user-service'
 
 export type CognitoAttributeName =
     | 'address'
@@ -25,3 +29,26 @@ export type CognitoAttributeName =
 export type VerifiableAttribute = 'email_verified' | 'phone_number_verified'
 
 export type CognitoUserAttribute = Required<AttributeType>
+
+export type SearchableAttribute =
+    | Extract<
+          CognitoAttributeName,
+          | 'email'
+          | 'phone_number'
+          | 'name'
+          | 'given_name'
+          | 'family_name'
+          | 'preferred_username'
+      >
+    | 'username' // (case-sensitive)
+    | 'cognito:user_status' // (called Status in the Console) (case-insensitive)
+    | 'status' // (called Enabled in the Console) (case-sensitive)
+    | 'sub'
+
+export type CognitoFilters<UserInfoAttributes extends Record<string, unknown>> =
+    {
+        cognitoFilter: Parameters<
+            CognitoIdentityProvider['listUsers']
+        >[0]['Filter']
+        filters: SearchUserFilter<UserInfoAttributes>[]
+    }

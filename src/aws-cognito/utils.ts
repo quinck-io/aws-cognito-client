@@ -1,4 +1,4 @@
-import { CognitoAttributeName } from './models/attributes'
+import { CognitoAttributeName, SearchableAttribute } from './models/attributes'
 import { UserAttribute } from './models/users'
 
 export function defaultParse<X>(x: string): X {
@@ -23,3 +23,16 @@ export function createUserAttribute<AttributeType>(
     if (defaultValue) return { ...userAttribute, defaultValue }
     else return userAttribute
 }
+
+export const searchableAttributes: SearchableAttribute[] = [
+    'username',
+    'email',
+    'phone_number',
+    'name',
+    'given_name',
+    'family_name',
+    'preferred_username',
+    'cognito:user_status',
+    'status',
+    'sub',
+]
