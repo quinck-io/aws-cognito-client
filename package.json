@@ -5,6 +5,7 @@
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
+    "ts": "node --require ts-node/register",
     "lint": "eslint src/ test/",
     "lint:fix": "eslint src/ test/ --fix",
     "build": "tsc",
