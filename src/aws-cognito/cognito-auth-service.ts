@@ -221,7 +221,7 @@ class AuthenticationManager {
         options: AuthChallengeOptions,
         additionalChallengeResponses?: Record<string, string>,
     ): Promise<LoginResult> {
-        const { name } = completion
+        const { name, username } = completion
         const ChallengeName = this.challengeNameToCognitoChallengeName(name)
         const { ChallengeParameters, Session } = this.parseParameters(
             options.parameters,
@@ -230,6 +230,7 @@ class AuthenticationManager {
         const ChallengeResponses = {
             ...ChallengeParameters,
             ...(additionalChallengeResponses ?? {}),
+            USERNAME: username,
         }
 
         const result =
