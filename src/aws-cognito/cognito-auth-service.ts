@@ -45,17 +45,21 @@ export class CognitoAuthService
     implements AuthService
 {
     private readonly clientId: string
-    private readonly authManager: AuthenticationManager
+    private readonly authManager: (
+        userTokens?: Partial<UserToken>,
+    ) => AuthenticationManager
 
     constructor(config: CognitoAuthServiceConfig) {
         super(config)
         const { clientId, userPoolId } = config
         this.clientId = clientId
-        this.authManager = new AuthenticationManager(
-            this.cognitoIdentityProvider,
-            userPoolId,
-            clientId,
-        )
+        this.authManager = tokens =>
+            new AuthenticationManager(
+                this.cognitoIdentityProvider,
+                userPoolId,
+                clientId,
+                tokens,
+            )
     }
 
     public completeAuthChallenge(
@@ -63,7 +67,7 @@ export class CognitoAuthService
         options: AuthChallengeOptions,
     ): Promise<LoginResult> {
         return this.tryDo(async () => {
-            return await this.authManager.completeAuthChallenge(
+            return await this.authManager().completeAuthChallenge(
                 completion,
                 options,
             )
@@ -87,7 +91,7 @@ export class CognitoAuthService
     public async login(userData: Credentials): Promise<LoginResult> {
         return this.tryDo(async () => {
             const { password, username } = userData
-            const result = await this.authManager.adminInitiateAuth({
+            const result = await this.authManager().adminInitiateAuth({
                 AuthFlow: AuthFlowType.ADMIN_USER_PASSWORD_AUTH,
                 AuthParameters: {
                     USERNAME: username,
@@ -102,14 +106,16 @@ export class CognitoAuthService
 
     public async refresh(token: RefreshAuthToken): Promise<UserToken> {
         return this.tryDo(async () => {
-            const loginResult = await this.authManager.adminInitiateAuth({
-                AuthFlow: AuthFlowType.REFRESH_TOKEN_AUTH,
-                ClientId: this.clientId,
-                UserPoolId: this.userPoolId,
-                AuthParameters: {
-                    REFRESH_TOKEN: token.refreshToken,
+            const loginResult = await this.authManager(token).adminInitiateAuth(
+                {
+                    AuthFlow: AuthFlowType.REFRESH_TOKEN_AUTH,
+                    ClientId: this.clientId,
+                    UserPoolId: this.userPoolId,
+                    AuthParameters: {
+                        REFRESH_TOKEN: token.refreshToken,
+                    },
                 },
-            })
+            )
             if (isUserToken(loginResult)) return loginResult
             throw new UnauthorizedError()
         })
@@ -160,6 +166,7 @@ class AuthenticationManager {
         private readonly cognitoIdentityProvider: CognitoIdentityProvider,
         private readonly userPoolId: string,
         private readonly clientId: string,
+        private readonly userTokens: Partial<UserToken> = {},
     ) {}
 
     public async adminInitiateAuth(
@@ -280,11 +287,14 @@ class AuthenticationManager {
     public parseUserToken(authResult?: AuthenticationResultType): UserToken {
         if (authResult) {
             const { AccessToken, RefreshToken, IdToken } = authResult
-            if (AccessToken && RefreshToken && IdToken) {
+            const accessToken = AccessToken
+            const idToken = IdToken
+            const refreshToken = RefreshToken ?? this.userTokens.refreshToken
+            if (accessToken && refreshToken && idToken) {
                 return {
-                    accessToken: AccessToken,
-                    idToken: IdToken,
-                    refreshToken: RefreshToken,
+                    accessToken,
+                    idToken,
+                    refreshToken,
                 }
             }
         }
