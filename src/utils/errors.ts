@@ -57,3 +57,7 @@ export class UnknownInternalError extends BasicError {
 export class InvalidOrExpiredCodeError extends BasicError {
     public readonly name = InvalidOrExpiredCodeError.name
 }
+
+export class UserNotConfirmedError extends BasicError {
+    public readonly name = UserNotConfirmedError.name
+}

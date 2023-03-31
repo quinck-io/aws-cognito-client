@@ -6,6 +6,7 @@ import {
     InvalidPasswordException,
     NotAuthorizedException,
     UnauthorizedException,
+    UserNotConfirmedException,
     UserNotFoundException,
     UsernameExistsException,
 } from '@aws-sdk/client-cognito-identity-provider'
@@ -19,6 +20,7 @@ import {
     UnauthorizedError,
     UnknownInternalError,
     UserAlreadyExistsError,
+    UserNotConfirmedError,
     UserNotFoundError,
     UserNotRetrievedError,
     WrongUsernameOrPasswordError,
@@ -180,6 +182,8 @@ export class BasicCognitoService<
                 return new InvalidPasswordError(error)
             case ExpiredCodeException.name:
                 return new InvalidOrExpiredCodeError(error)
+            case UserNotConfirmedException.name:
+                return new UserNotConfirmedError(error)
             default:
                 return new UnknownInternalError(error)
         }
