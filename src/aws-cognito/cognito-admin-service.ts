@@ -23,23 +23,22 @@ import { FilledUserType } from './models/users'
 const COGNITO_LIST_LIMIT = 60
 
 export class CognitoAdminService<
-        SignUpInfo extends Partial<UserInfoAttributes>,
-        UserUpdateInfo extends Partial<UserInfoAttributes>,
-        UserInfoAttributes extends Record<string, unknown>,
-    >
+    SignUpInfo extends Partial<UserInfoAttributes>,
+    UserUpdateInfo extends Partial<UserInfoAttributes>,
+    UserInfoAttributes extends Record<string, unknown>,
+>
     extends BasicCognitoService<SignUpInfo, UserUpdateInfo, UserInfoAttributes>
     implements AdminUserService<SignUpInfo, UserUpdateInfo, UserInfoAttributes>
 {
     public async setUserPassword(
         username: string,
-        updatePassword: UpdateCredentialsInfo,
+        password: string,
     ): Promise<void> {
-        const { newPassword } = updatePassword
         await this.tryDo(async () => {
             await this.cognitoIdentityProvider.adminSetUserPassword({
                 UserPoolId: this.userPoolId,
                 Username: username,
-                Password: newPassword,
+                Password: password,
                 Permanent: true,
             })
         })

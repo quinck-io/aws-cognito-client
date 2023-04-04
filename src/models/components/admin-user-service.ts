@@ -1,5 +1,4 @@
 import { CompleteUserInfo } from '../utils/user'
-import { UpdateCredentialsInfo } from './auth-service'
 
 export interface AdminUserService<
     SignUpInfo extends Partial<UserInfoAttributes>,
@@ -11,10 +10,7 @@ export interface AdminUserService<
         user: SignUpInfo,
         groups?: string[],
     ): Promise<CompleteUserInfo<UserInfoAttributes>>
-    setUserPassword(
-        username: string,
-        updatePassword: UpdateCredentialsInfo,
-    ): Promise<void>
+    setUserPassword(username: string, password: string): Promise<void>
     getUser(username: string): Promise<CompleteUserInfo<UserInfoAttributes>>
     getUserGroups(username: string): Promise<string[]>
     updateUser(username: string, user: UserUpdateInfo): Promise<void>
