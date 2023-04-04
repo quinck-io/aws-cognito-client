@@ -1,6 +1,7 @@
 import {
     AttributeType,
     CognitoIdentityProvider,
+    CognitoIdentityProviderClientConfig,
     ExpiredCodeException,
     InvalidPasswordException,
     NotAuthorizedException,
@@ -34,6 +35,7 @@ export type CognitoServiceConfig<
     userStructure: UserStructure<UserInfoAttributes>
     fitSignUpInfo?: (user: SignUpInfo) => SignUpInfo
     fitUserUpdateInfo?: (user: UserUpdateInfo) => UserUpdateInfo
+    cognitoIdentityProviderClientConfig?: CognitoIdentityProviderClientConfig
 }
 
 export class BasicCognitoService<
@@ -60,16 +62,25 @@ export class BasicCognitoService<
             UserInfoAttributes
         >,
     ) {
-        this.cognitoIdentityProvider = new CognitoIdentityProvider({})
-        this.userStructure = config.userStructure
+        const {
+            userPoolId,
+            userStructure,
+            cognitoIdentityProviderClientConfig,
+            fitSignUpInfo,
+            fitUserUpdateInfo,
+        } = config
+        this.cognitoIdentityProvider = new CognitoIdentityProvider(
+            cognitoIdentityProviderClientConfig ?? {},
+        )
+        this.userStructure = userStructure
         this.userAttributes = Object.entries(
-            config.userStructure,
+            userStructure,
         ) as UserAttributesEntries<UserInfoAttributes>
         this.fitSignUpInfo =
-            config.fitSignUpInfo || BasicCognitoService.DEFAULT_FIT_INFO
+            fitSignUpInfo || BasicCognitoService.DEFAULT_FIT_INFO
         this.fitUserUpdateInfo =
-            config.fitUserUpdateInfo || BasicCognitoService.DEFAULT_FIT_INFO
-        this.userPoolId = config.userPoolId
+            fitUserUpdateInfo || BasicCognitoService.DEFAULT_FIT_INFO
+        this.userPoolId = userPoolId
     }
 
     protected async tryDo<X>(fun: () => Promise<X>): Promise<X> {

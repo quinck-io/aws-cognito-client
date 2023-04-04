@@ -50,6 +50,7 @@ export type GenericAuthChallengeCompletion =
 
 export type AuthChallengeCompletion<Name extends AuthChallengeName> = {
     name: Name
+    username: string
 }
 
 export type NewPasswordRequiredChallengeCompletion =

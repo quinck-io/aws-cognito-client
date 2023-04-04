@@ -8,6 +8,7 @@ export interface UserService<
 > {
     signUp(credentials: Credentials, data: SignUpInfo): Promise<void>
     confirmSignUp(username: string, code: string): Promise<void>
+    resendConfirmationCode(username: string): Promise<void>
     getUserInfo(token: UserAuthToken): Promise<UserInfo<UserInfoAttributes>>
     updateUserInfo(token: UserAuthToken, user: UserUpdateInfo): Promise<void>
     deleteUser(token: UserAuthToken): Promise<void>

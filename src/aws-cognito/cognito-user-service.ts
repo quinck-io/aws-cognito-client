@@ -59,6 +59,15 @@ export class CognitoUserService<
         })
     }
 
+    public async resendConfirmationCode(username: string): Promise<void> {
+        return this.tryDo(async () => {
+            await this.cognitoIdentityProvider.resendConfirmationCode({
+                ClientId: this.clientId,
+                Username: username,
+            })
+        })
+    }
+
     public getUserInfo(
         token: UserToken,
     ): Promise<UserInfo<UserInfoAttributes>> {
