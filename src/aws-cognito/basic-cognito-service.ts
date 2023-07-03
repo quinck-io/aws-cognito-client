@@ -185,7 +185,7 @@ export class BasicCognitoService<
             case UserNotConfirmedException.name:
                 return new UserNotConfirmedError(error)
             default:
-                return new UnknownInternalError(error)
+                return error
         }
     }
 }
