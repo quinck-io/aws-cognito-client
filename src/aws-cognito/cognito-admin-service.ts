@@ -71,6 +71,7 @@ export class CognitoAdminService<
                     DesiredDeliveryMediums:
                         postSignupMessageConfig?.deliveryMediums,
                     MessageAction: postSignupMessageConfig?.action,
+                    ForceAliasCreation: true,
                 },
             )
             if (User?.Attributes && User.Username) {
