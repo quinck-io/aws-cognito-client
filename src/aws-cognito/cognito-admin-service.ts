@@ -1,5 +1,6 @@
 import {
     AdminGetUserResponse,
+    AttributeType,
     UserType,
 } from '@aws-sdk/client-cognito-identity-provider'
 import '@quinck/collections'
@@ -55,13 +56,11 @@ export class CognitoAdminService<
         params: CreateUserParams<SignUpInfo>,
     ): Promise<CompleteUserInfo<UserInfoAttributes>> {
         return this.tryDo(async () => {
-            const { credentials, user, postSignupMessageConfig } = params
+            const { credentials, postSignupMessageConfig } = params
             const { username, password } = credentials
 
-            const attributes = this.createAttributesFromObject(
-                this.fitSignUpInfo(user),
-                false,
-            )
+            const attributes = this.createUserAttributes(params)
+
             const { User } = await this.cognitoIdentityProvider.adminCreateUser(
                 {
                     UserPoolId: this.userPoolId,
@@ -71,9 +70,9 @@ export class CognitoAdminService<
                     DesiredDeliveryMediums:
                         postSignupMessageConfig?.deliveryMediums,
                     MessageAction: postSignupMessageConfig?.action,
-                    ForceAliasCreation: true,
                 },
             )
+
             if (User?.Attributes && User.Username) {
                 return this.parseUser(User as FilledUserType)
             }
@@ -356,12 +355,39 @@ export class CognitoAdminService<
         await this.cognitoIdentityProvider.adminUpdateUserAttributes({
             Username: username,
             UserPoolId: this.userPoolId,
-            UserAttributes: [
-                {
-                    Name: attribute,
-                    Value: 'true',
-                },
-            ],
+            UserAttributes: [this.verifiedAttribute(attribute)],
         })
+    }
+
+    private verifiedAttribute(
+        attribute: VerifiableAttribute,
+    ): Required<AttributeType> {
+        return {
+            Name: attribute,
+            Value: 'true',
+        }
+    }
+
+    private createUserAttributes(
+        params: CreateUserParams<SignUpInfo>,
+    ): Required<AttributeType>[] {
+        const {
+            userAttributes,
+            forceEmailVerification,
+            forcePhoneNumberVerification,
+        } = params
+
+        const attributes = this.createAttributesFromObject(
+            this.fitSignUpInfo(userAttributes),
+            false,
+        )
+
+        if (forceEmailVerification === true)
+            attributes.push(this.verifiedAttribute('email_verified'))
+
+        if (forcePhoneNumberVerification === true)
+            attributes.push(this.verifiedAttribute('phone_number_verified'))
+
+        return attributes
     }
 }

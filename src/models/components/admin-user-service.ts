@@ -58,6 +58,8 @@ export type PostSignupMessageConfig = {
 
 export type CreateUserParams<SignUpInfo> = {
     credentials: AdminCreateUserCredentials
-    user: SignUpInfo
+    userAttributes: SignUpInfo
     postSignupMessageConfig?: PostSignupMessageConfig
+    forceEmailVerification?: boolean
+    forcePhoneNumberVerification?: boolean
 }
