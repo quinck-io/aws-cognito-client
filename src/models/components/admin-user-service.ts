@@ -4,6 +4,7 @@ export interface AdminUserService<
     SignUpInfo extends Partial<UserInfoAttributes>,
     UserUpdateInfo extends Partial<UserInfoAttributes>,
     UserInfoAttributes extends Record<string, unknown>,
+    Group extends string = string,
 > {
     createUser(
         params: CreateUserParams<SignUpInfo>,
@@ -13,8 +14,8 @@ export interface AdminUserService<
     getUserGroups(username: string): Promise<string[]>
     updateUser(username: string, user: UserUpdateInfo): Promise<void>
     deleteUser(username: string): Promise<void>
-    addUserToGroup(username: string, group: string): Promise<void>
-    removeUserFromGroup(username: string, group: string): Promise<void>
+    addUserToGroup(username: string, ...groups: Group[]): Promise<void>
+    removeUserFromGroup(username: string, ...groups: Group[]): Promise<void>
     disableUser(username: string): Promise<void>
     enableUser(username: string): Promise<void>
     getAllUsers(): Promise<CompleteUserInfo<UserInfoAttributes>[]>
@@ -22,7 +23,7 @@ export interface AdminUserService<
         params: SearchUsersParameters,
     ): Promise<CompleteUserInfo<UserInfoAttributes>[]>
     searchUsersInGroup(
-        group: string,
+        group: Group,
         params: SearchUsersParameters,
     ): Promise<CompleteUserInfo<UserInfoAttributes>[]>
     getUserByEmail(email: string): Promise<CompleteUserInfo<UserInfoAttributes>>

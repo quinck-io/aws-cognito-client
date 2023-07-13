@@ -23,9 +23,11 @@ export class CognitoAdminService<
         SignUpInfo extends Partial<UserInfoAttributes>,
         UserUpdateInfo extends Partial<UserInfoAttributes>,
         UserInfoAttributes extends Record<string, unknown>,
+        Group extends string = string,
     >
     extends BasicCognitoService<SignUpInfo, UserUpdateInfo, UserInfoAttributes>
-    implements AdminUserService<SignUpInfo, UserUpdateInfo, UserInfoAttributes>
+    implements
+        AdminUserService<SignUpInfo, UserUpdateInfo, UserInfoAttributes, Group>
 {
     public async setUserPassword(
         username: string,
@@ -93,33 +95,30 @@ export class CognitoAdminService<
 
     public async addUserToGroup(
         username: string,
-        group: string,
+        ...groups: Group[]
     ): Promise<void> {
-        return this._addUserToGroup(username, group)
+        await this.tryDo(async () => {
+            for (const group of groups) {
+                await this.cognitoIdentityProvider.adminAddUserToGroup({
+                    GroupName: group,
+                    UserPoolId: this.userPoolId,
+                    Username: username,
+                })
+            }
+        })
     }
 
     public async removeUserFromGroup(
         username: string,
-        group: string,
+        ...groups: Group[]
     ): Promise<void> {
-        await this.cognitoIdentityProvider.adminRemoveUserFromGroup({
-            GroupName: group,
-            UserPoolId: this.userPoolId,
-            Username: username,
-        })
-    }
-
-    private async _addUserToGroup(
-        username: string,
-        group: string,
-    ): Promise<void> {
-        await this.tryDo(() =>
-            this.cognitoIdentityProvider.adminAddUserToGroup({
+        for (const group of groups) {
+            await this.cognitoIdentityProvider.adminRemoveUserFromGroup({
                 GroupName: group,
                 UserPoolId: this.userPoolId,
                 Username: username,
-            }),
-        )
+            })
+        }
     }
 
     public async searchUsers(): Promise<
