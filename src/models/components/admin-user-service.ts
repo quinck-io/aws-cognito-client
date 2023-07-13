@@ -6,9 +6,7 @@ export interface AdminUserService<
     UserInfoAttributes extends Record<string, unknown>,
 > {
     createUser(
-        credentials: AdminCreateUserCredentials,
-        user: SignUpInfo,
-        groups?: string[],
+        params: CreateUserParams<SignUpInfo>,
     ): Promise<CompleteUserInfo<UserInfoAttributes>>
     setUserPassword(username: string, password: string): Promise<void>
     getUser(username: string): Promise<CompleteUserInfo<UserInfoAttributes>>
@@ -40,4 +38,25 @@ export type AdminCreateUserCredentials = {
 
 export type SearchUsersParameters = {
     // TODO
+}
+
+export enum PostSignupMessageAction {
+    RESEND = 'RESEND',
+    SUPPRESS = 'SUPPRESS',
+}
+
+export enum DeliveryMedium {
+    EMAIL = 'EMAIL',
+    SMS = 'SMS',
+}
+
+export type PostSignupMessageConfig = {
+    action?: PostSignupMessageAction
+    deliveryMediums?: DeliveryMedium[]
+}
+
+export type CreateUserParams<SignUpInfo> = {
+    credentials: AdminCreateUserCredentials
+    user: SignUpInfo
+    postSignupMessageConfig?: PostSignupMessageConfig
 }

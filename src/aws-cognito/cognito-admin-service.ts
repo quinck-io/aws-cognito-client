@@ -1,15 +1,12 @@
 import {
     AdminGetUserResponse,
-    UserStatusType,
     UserType,
 } from '@aws-sdk/client-cognito-identity-provider'
 import '@quinck/collections'
 import {
-    AdminCreateUserCredentials,
     AdminUserService,
-    SearchUsersParameters,
+    CreateUserParams,
 } from '../models/components/admin-user-service'
-import { UpdateCredentialsInfo } from '../models/components/auth-service'
 import { CompleteUserInfo, UserStatus } from '../models/utils/user'
 import {
     UnknownInternalError,
@@ -23,10 +20,10 @@ import { FilledUserType } from './models/users'
 const COGNITO_LIST_LIMIT = 60
 
 export class CognitoAdminService<
-    SignUpInfo extends Partial<UserInfoAttributes>,
-    UserUpdateInfo extends Partial<UserInfoAttributes>,
-    UserInfoAttributes extends Record<string, unknown>,
->
+        SignUpInfo extends Partial<UserInfoAttributes>,
+        UserUpdateInfo extends Partial<UserInfoAttributes>,
+        UserInfoAttributes extends Record<string, unknown>,
+    >
     extends BasicCognitoService<SignUpInfo, UserUpdateInfo, UserInfoAttributes>
     implements AdminUserService<SignUpInfo, UserUpdateInfo, UserInfoAttributes>
 {
@@ -53,11 +50,12 @@ export class CognitoAdminService<
     }
 
     public async createUser(
-        { username, password }: AdminCreateUserCredentials,
-        user: SignUpInfo,
-        groups: string[] = [],
+        params: CreateUserParams<SignUpInfo>,
     ): Promise<CompleteUserInfo<UserInfoAttributes>> {
         return this.tryDo(async () => {
+            const { credentials, user, postSignupMessageConfig } = params
+            const { username, password } = credentials
+
             const attributes = this.createAttributesFromObject(
                 this.fitSignUpInfo(user),
                 false,
@@ -68,13 +66,12 @@ export class CognitoAdminService<
                     Username: username,
                     TemporaryPassword: password,
                     UserAttributes: attributes,
-                    DesiredDeliveryMediums: ['EMAIL'],
+                    DesiredDeliveryMediums:
+                        postSignupMessageConfig?.deliveryMediums,
+                    MessageAction: postSignupMessageConfig?.action,
                 },
             )
-            for (const group of groups) {
-                await this._addUserToGroup(username, group)
-            }
-            if (User && User.Attributes && User.Username) {
+            if (User?.Attributes && User.Username) {
                 return this.parseUser(User as FilledUserType)
             }
             throw new UnknownInternalError()
@@ -125,9 +122,9 @@ export class CognitoAdminService<
         )
     }
 
-    public async searchUsers(
-        params: SearchUsersParameters,
-    ): Promise<CompleteUserInfo<UserInfoAttributes>[]> {
+    public async searchUsers(): Promise<
+        CompleteUserInfo<UserInfoAttributes>[]
+    > {
         return this.tryDo(async () => {
             const users = await this.getAllUsersAllPages()
             return this.parseUsersSearchResult(users)
@@ -136,7 +133,6 @@ export class CognitoAdminService<
 
     public searchUsersInGroup(
         group: string,
-        params: SearchUsersParameters,
     ): Promise<CompleteUserInfo<UserInfoAttributes>[]> {
         return this.tryDo(async () => {
             const users = await this.getAllUsersByGroupAllPages(group)
@@ -144,9 +140,10 @@ export class CognitoAdminService<
         })
     }
 
-    public async getAllUsers(/* comment essential for eslint and prettier rules
-     */): Promise<CompleteUserInfo<UserInfoAttributes>[]> {
-        return await this.searchUsers({})
+    public async getAllUsers(): Promise<
+        CompleteUserInfo<UserInfoAttributes>[]
+    > {
+        return await this.searchUsers()
     }
 
     public async getUserByEmail(
@@ -289,7 +286,7 @@ export class CognitoAdminService<
         })
     }
 
-    private mapStatus(status?: UserStatusType | string): UserStatus {
+    private mapStatus(status?: string): UserStatus {
         switch (status) {
             case 'UNCONFIRMED':
                 return UserStatus.UNCONFIRMED
