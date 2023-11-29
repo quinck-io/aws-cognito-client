@@ -30,6 +30,15 @@ export class CognitoAdminService<
     implements
         AdminUserService<SignUpInfo, UserUpdateInfo, UserInfoAttributes, Group>
 {
+    public async confirmSignUp(username: string): Promise<void> {
+        await this.tryDo(async () => {
+            await this.cognitoIdentityProvider.adminConfirmSignUp({
+                UserPoolId: this.userPoolId,
+                Username: username,
+            })
+        })
+    }
+
     public async setUserPassword(
         username: string,
         password: string,
@@ -172,7 +181,7 @@ export class CognitoAdminService<
                 PaginationToken: paginationToken,
                 Limit: COGNITO_LIST_LIMIT,
             })
-        const users = currentUsers.concat(Users || [])
+        const users = currentUsers.concat(Users ?? [])
         if (!PaginationToken) return users
         else return this.getAllUsersAllPages(users, PaginationToken)
     }
@@ -189,7 +198,7 @@ export class CognitoAdminService<
                 NextToken: paginationToken,
                 Limit: COGNITO_LIST_LIMIT,
             })
-        const users = currentUsers.concat(Users || [])
+        const users = currentUsers.concat(Users ?? [])
         if (!NextToken) return users
         else return this.getAllUsersByGroupAllPages(groupName, users, NextToken)
     }

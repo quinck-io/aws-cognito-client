@@ -30,6 +30,7 @@ export interface AdminUserService<
     forceEmailVerification(username: string): Promise<void>
     forcePhoneNumberVerification(username: string): Promise<void>
     updateUserPassword(username: string, password: string): Promise<void>
+    confirmSignUp(username: string): Promise<void>
 }
 
 export type AdminCreateUserCredentials = {
