@@ -91,13 +91,15 @@ export class CognitoAdminService<
 
     public async updateUserPassword(
         username: string,
-        password: string,
+        password?: string,
+        permanent?: boolean,
     ): Promise<void> {
         return this.tryDo(async () => {
-            this.cognitoIdentityProvider.adminSetUserPassword({
+            await this.cognitoIdentityProvider.adminSetUserPassword({
                 Username: username,
                 Password: password,
                 UserPoolId: this.userPoolId,
+                Permanent: permanent,
             })
         })
     }
