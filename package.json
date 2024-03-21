@@ -52,6 +52,6 @@
   ],
   "dependencies": {
     "@aws-sdk/client-cognito-identity-provider": "^3.362.0",
-    "@quinck/collections": "^0.3.0"
+    "@quinck/collections": "^0.4.1"
   }
 }
